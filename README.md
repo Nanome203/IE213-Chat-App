@@ -1,21 +1,27 @@
 # bun-react-tailwind-template
 
-To install dependencies:
+First, install dependencies:
 
 ```bash
 bun install
 ```
 
-To start a development server:
+Then, create .env file and add the database url:
 
-```bash
-bun dev
+```
+DATABASE_URL=
 ```
 
-To run for production:
+Run the following command to generate database schema:
+
+```sh
+bun run schema
+```
+
+Finally, start a development server with:
 
 ```bash
-bun start
+bun run dev
 ```
 
 This project was created using `bun init` in bun v1.2.14. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
