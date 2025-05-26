@@ -1,34 +1,31 @@
-import { serve } from "bun";
+import Elysia from "elysia";
 import index from "./index.html";
+import swagger from "@elysiajs/swagger";
+import testPlugin from "./utils/testPlugin";
 
-const server = serve({
+const app = new Elysia()
+  .use(swagger())
+  .use(testPlugin())
+  .get("/api/hello", () => ({
+    message: "Hello, world!",
+    method: "GET",
+  }))
+  .put("/api/hello", () => ({
+    message: "Hello, world!",
+    method: "PUT",
+  }))
+  .get("/api/hello/:name", (req) => {
+    const name = req.params.name;
+    return {
+      message: `Hello, ${name}!`,
+    };
+  });
+
+Bun.serve({
   routes: {
-    // Serve index.html for all unmatched routes.
-    "/*": index,
-
-    "/api/hello": {
-      async GET(req) {
-        return Response.json({
-          message: "Hello, world!",
-          method: "GET",
-        });
-      },
-      async PUT(req) {
-        return Response.json({
-          message: "Hello, world!",
-          method: "PUT",
-        });
-      },
-    },
-
-    "/api/hello/:name": async req => {
-      const name = req.params.name;
-      return Response.json({
-        message: `Hello, ${name}!`,
-      });
-    },
+    "/": index,
   },
-
+  fetch: app.fetch,
   development: process.env.NODE_ENV !== "production" && {
     // Enable browser hot reloading in development
     hmr: true,
