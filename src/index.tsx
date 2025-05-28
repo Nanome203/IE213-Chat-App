@@ -2,10 +2,12 @@ import Elysia from "elysia";
 import index from "./index.html";
 import swagger from "@elysiajs/swagger";
 import testPlugin from "./utils/testPlugin";
+import { authRoute } from "./backend/auth";
 
 const app = new Elysia()
   .use(swagger())
   .use(testPlugin())
+  .use(authRoute)
   .get("/api/hello", () => ({
     message: "Hello, world!",
     method: "GET",
