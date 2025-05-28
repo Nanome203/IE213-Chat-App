@@ -74,10 +74,10 @@ const app = new Elysia()
       }
     },
   });
-app.listen(3000);
+app.listen(5050);
 
 Bun.serve({
-  port: 8080,
+  port: 3000,
   routes: {
     "/": index,
     "/hello": hello,

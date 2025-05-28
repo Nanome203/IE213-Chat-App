@@ -13,7 +13,7 @@ export function HelloApp() {
   const [socket, setSocket] = useState<WebSocket | null>(null);
 
   useEffect(() => {
-    const ws = new WebSocket(`ws://localhost:3000/ws`);
+    const ws = new WebSocket(`ws://localhost:5050/ws`);
     setSocket(ws);
 
     ws.onopen = () => {
