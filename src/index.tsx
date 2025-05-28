@@ -4,6 +4,7 @@ import hello from "./hello/index.html";
 import swagger from "@elysiajs/swagger";
 import testPlugin from "./utils/testPlugin";
 import { ServerWebSocket, Server } from "bun";
+import cors from "@elysiajs/cors";
 
 const idCounter = (() => {
   let id = 0;
@@ -20,6 +21,7 @@ let messages: Message[] = [];
 const channels = new Map<string, Set<ServerWebSocket<unknown>>>();
 
 const app = new Elysia()
+  .use(cors())
   .use(swagger())
   .use(testPlugin())
   .get("/api/hello", () => ({
