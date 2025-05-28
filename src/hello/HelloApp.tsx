@@ -13,15 +13,17 @@ export function HelloApp() {
   const [socket, setSocket] = useState<WebSocket | null>(null);
 
   useEffect(() => {
-    // fetch("/api/messages")
-    //   .then((res) => res.json())
-    //   .then(setMessages);
-
-    const ws = new WebSocket(`ws://${location.host}/ws`);
+    const ws = new WebSocket(`ws://localhost:3000/ws`);
     setSocket(ws);
 
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ type: "subscribe", channel: "chat" }));
+    };
+
     ws.onmessage = (event) => {
+      // console.log(event);
       const msg = JSON.parse(event.data);
+      // console.log(msg);
 
       if (msg.type === "history") {
         setMessages(msg.data);
@@ -35,6 +37,7 @@ export function HelloApp() {
 
   const sendMessage = () => {
     if (!text.trim() || !socket) return;
+
     socket.send(JSON.stringify({ type: "message", user, text }));
     setText("");
   };

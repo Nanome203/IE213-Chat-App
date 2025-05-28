@@ -9,7 +9,7 @@ const idCounter = (() => {
   let id = 0;
   return () => ++id;
 })();
-type Message = { id: number; user: string; text: string };
+type Message = { type: string; id: number; user: string; text: string };
 let messages: Message[] = [];
 
 const app = new Elysia()
@@ -30,46 +30,59 @@ const app = new Elysia()
     };
   })
   .get("/api/messages", () => messages)
-  .post("/api/messages", async ({ body }: { body: Message }) => {
-    const newMessage = {
-      id: idCounter(),
-      user: body.user ?? "Anonymous",
-      text: body.text,
-    };
-    messages.push(newMessage);
+  // .post("/api/messages", async ({ body }: { body: Message }) => {
+  //   const newMessage = {
+  //     id: idCounter(),
+  //     user: body.user ?? "Anonymous",
+  //     text: body.text,
+  //   };
+  //   messages.push(newMessage);
 
-    return newMessage;
-  })
-  .use(websocket())
+  //   return newMessage;
+  // })
   .ws("/ws", {
     open(ws) {
       ws.send(JSON.stringify({ type: "history", data: messages }));
     },
     message(ws, data) {
-      const parsed = JSON.parse(data as string);
+      // console.log("recv")
+      // console.log(data.type+"b4 parse");
+      // const parsed = JSON.parse(data) as Message;
+      // console.log("aft parse");
+      // console.log(parsed.type);
 
-      if (parsed.type === "message") {
+      if (data.type === "subscribe") {
+        ws.subscribe(data.channel);
+        // console.log(`Client subscribed to ${data.channel}`);
+      }
+
+      if (data.type === "message") {
         const newMessage = {
+          ...data,
           id: idCounter(),
-          user: parsed.user,
-          text: parsed.text,
         };
         messages.push(newMessage);
+
+        ws.send(JSON.stringify({ type: "message", data: newMessage }));
 
         ws.publish(
           "chat",
           JSON.stringify({ type: "message", data: newMessage })
         );
+
+        // console.log("publish chat!");
       }
     },
   });
+app.listen(3000);
 
 Bun.serve({
+  port: 8080,
   routes: {
     "/": index,
     "/hello": hello,
   },
-  fetch: app.fetch,
+  // fetch: app.fetch,
   development: process.env.NODE_ENV !== "production" && {
     // Enable browser hot reloading in development
     hmr: true,
@@ -78,3 +91,4 @@ Bun.serve({
     console: true,
   },
 });
+console.log("Server running");
