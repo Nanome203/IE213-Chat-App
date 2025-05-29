@@ -3,6 +3,7 @@ import jwt from "@elysiajs/jwt";
 import { eq } from "drizzle-orm";
 import { users } from "drizzle/schema";
 import Elysia, { t } from "elysia";
+import { protectedRoute } from "./middleware";
 
 export const authRoute = new Elysia({ prefix: "/auth" })
   .use(
@@ -92,6 +93,7 @@ export const authRoute = new Elysia({ prefix: "/auth" })
       body: "authData",
     }
   )
+  .use(protectedRoute)
   .post("/logout", ({ cookie: { authjwt } }) => {
     authjwt.remove();
     return {
