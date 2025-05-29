@@ -3,8 +3,8 @@ import index from "./index.html";
 import hello from "./hello/index.html";
 import swagger from "@elysiajs/swagger";
 import testPlugin from "./utils/testPlugin";
-import { ServerWebSocket, Server } from "bun";
 import cors from "@elysiajs/cors";
+import { ServerWebSocket, Server } from "bun";
 
 const idCounter = (() => {
   let id = 0;
