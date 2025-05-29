@@ -8,19 +8,19 @@ export const protectedRoute = new Elysia({ name: "protectedRoute" })
       secret: process.env.JWT_SECRET!,
     })
   )
-  .onTransform(async ({ jwt, cookie: { authjwt } }) => {
+  .onBeforeHandle(async ({ jwt, cookie: { authjwt } }) => {
     if (!authjwt.value) {
-      throw new Error("Unauthorized");
+      return Response.json({ status: 401, error: "Unauthorized" });
     }
 
     try {
       const decoded = await jwt.verify(authjwt.value);
       if (!decoded) {
-        throw new Error("Invalid token");
+        return Response.json({ status: 401, error: "Invalid token" });
       }
       // Token is valid, do nothing
     } catch (error) {
-      throw new Error("Token verification failed");
+      return Response.json({ status: 401, error: "Token verification failed" });
     }
   })
   .as("scoped");

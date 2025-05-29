@@ -86,7 +86,6 @@ export const authRoute = new Elysia({ prefix: "/auth" })
       return {
         status: 201,
         message: "User created successfully",
-        user: newUser,
       };
     },
     {
