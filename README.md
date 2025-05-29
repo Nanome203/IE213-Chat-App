@@ -8,7 +8,7 @@ bun install
 
 Then, create .env file and add the database url:
 
-```
+```env
 DATABASE_URL=
 ```
 
