@@ -12,6 +12,7 @@
     "schema": "bunx drizzle-kit pull"
   },
   "dependencies": {
+    "@elysiajs/jwt": "^1.3.0",
     "@elysiajs/swagger": "^1.3.0",
     "bun-plugin-tailwind": "^0.0.14",
     "drizzle-orm": "^0.43.1",
