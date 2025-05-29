@@ -11,8 +11,8 @@ export const authRoute = new Elysia({ prefix: "/auth" })
       secret: process.env.JWT_SECRET!,
     })
   )
-  .guard({
-    body: t.Object({
+  .model({
+    authData: t.Object({
       email: t.String({ format: "email" }),
       password: t.String({ minLength: 8 }),
     }),
@@ -53,33 +53,49 @@ export const authRoute = new Elysia({ prefix: "/auth" })
         status: 401,
         message: "Invalid email or password",
       };
+    },
+    {
+      body: "authData",
     }
   )
-  .post("signup", async ({ body: { email, password } }) => {
-    const existingEmail = (
-      await db
-        .select({ email: users.email })
-        .from(users)
-        .where(eq(users.email, email))
-    )[0];
-    if (existingEmail) {
-      return {
-        status: 409,
-        message: "Email already exists",
-      };
-    }
-    const hashedPassword = await Bun.password.hash(password, {
-      algorithm: "bcrypt",
-    });
+  .post(
+    "signup",
+    async ({ body: { email, password } }) => {
+      const existingEmail = (
+        await db
+          .select({ email: users.email })
+          .from(users)
+          .where(eq(users.email, email))
+      )[0];
+      if (existingEmail) {
+        return {
+          status: 409,
+          message: "Email already exists",
+        };
+      }
+      const hashedPassword = await Bun.password.hash(password, {
+        algorithm: "bcrypt",
+      });
 
-    const newUser = {
-      email,
-      password: hashedPassword,
-    };
-    await db.insert(users).values(newUser);
+      const newUser = {
+        email,
+        password: hashedPassword,
+      };
+      await db.insert(users).values(newUser);
+      return {
+        status: 201,
+        message: "User created successfully",
+        user: newUser,
+      };
+    },
+    {
+      body: "authData",
+    }
+  )
+  .post("/logout", ({ cookie: { authjwt } }) => {
+    authjwt.remove();
     return {
-      status: 201,
-      message: "User created successfully",
-      user: newUser,
+      status: 200,
+      message: "Logout successfully",
     };
   });
