@@ -1,19 +1,15 @@
 import { useEffect, useState } from "react";
-
-type Message = {
-  id: number;
-  user: string;
-  text: string;
-};
+import { Message } from "..";
 
 export function HelloApp() {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [text, setText] = useState("");
   const [user, setUser] = useState("User");
+  const [text, setText] = useState("");
+  const [img, setImg] = useState("");
   const [socket, setSocket] = useState<WebSocket | null>(null);
 
   useEffect(() => {
-    const ws = new WebSocket(`ws://localhost:5050/ws`);
+    const ws = new WebSocket(`ws://localhost:3000/ws`);
     setSocket(ws);
 
     ws.onopen = () => {
@@ -38,8 +34,9 @@ export function HelloApp() {
   const sendMessage = () => {
     if (!text.trim() || !socket) return;
 
-    socket.send(JSON.stringify({ type: "message", user, text }));
+    socket.send(JSON.stringify({ type: "message", user, text, img }));
     setText("");
+    setImg("");
   };
 
   return (
@@ -60,6 +57,12 @@ export function HelloApp() {
           onChange={(e) => setText(e.target.value)}
           placeholder="Type a message"
         />
+        <input
+          className="border p-2 mr-2 w-2/3"
+          value={img}
+          onChange={(e) => setImg(e.target.value)}
+          placeholder="Image link: https://picsum.photos/200"
+        />
         <button
           className="bg-blue-500 text-white px-4 py-2"
           onClick={sendMessage}
@@ -71,6 +74,7 @@ export function HelloApp() {
         {messages.map((m) => (
           <li key={m.id} className="border p-2 rounded">
             <strong>{m.user}:</strong> {m.text}
+            {m.img && <img src={m.img} alt={m.img} />}
           </li>
         ))}
       </ul>
