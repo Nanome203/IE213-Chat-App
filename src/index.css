@@ -1,13 +1,21 @@
 @import "tailwindcss";
 
-@layer base {
+/* @layer base {
   :root {
-    @apply text-[rgba(255,255,255,0.87)] bg-[#242424] font-sans;
+    @apply text-[rgba(255, 255, 255, 0.87)] bg-[#242424] font-sans;
   }
 
   body {
     @apply grid place-items-center min-w-[320px] min-h-screen relative m-0;
   }
+} */
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
 }
 
 body::before {
@@ -27,6 +35,7 @@ body::before {
   from {
     background-position: 0 0;
   }
+
   to {
     background-position: 256px 224px;
   }
@@ -36,12 +45,14 @@ body::before {
   from {
     transform: rotate(0);
   }
+
   to {
     transform: rotate(360deg);
   }
 }
 
 @media (prefers-reduced-motion) {
+
   *,
   ::before,
   ::after {
