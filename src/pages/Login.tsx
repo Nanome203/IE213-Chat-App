@@ -1,12 +1,13 @@
 import logo from "../assets/img/loginChatApp.png";
 import bgLogin from "../assets/img/bg_login.png";
-import { useEffect, useState } from "react";
+import { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import axios from "axios";
-// import "../index.css";
+import { authContext } from "@/context";
 
 function Login() {
   const navigate = useNavigate();
+  const { setIsLoggedIn } = useContext(authContext);
 
   const [loginInfo, setLoginInfo] = useState({
     email: "",
@@ -22,7 +23,6 @@ function Login() {
   };
 
   const handleLogin = async (e: React.FormEvent<HTMLButtonElement>) => {
-    e.preventDefault();
     try {
       const response = await axios.post(
         "http://localhost:3000/auth/login",
@@ -30,24 +30,13 @@ function Login() {
       );
       if (response.data.status === 200) {
         alert("Login successful!");
+        setIsLoggedIn(true);
         navigate("/app/home");
       }
     } catch (error) {
       alert("Login failed. Please check your credentials.");
     }
   };
-
-  useEffect(() => {
-    async function checkAuth() {
-      const response = await axios.get("http://localhost:3000/auth/check-auth");
-      const authStatus = response.data.status;
-
-      if (authStatus === 200) {
-        navigate("/app/home");
-      }
-    }
-    checkAuth();
-  }, []);
 
   return (
     <div

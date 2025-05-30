@@ -1,9 +1,8 @@
 import logo from "../assets/img/loginChatApp.png";
 import bgLogin from "../assets/img/bg_login.png";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import axios from "axios";
-// import "../index.css";
 
 function Signup() {
   const navigate = useNavigate();
@@ -36,18 +35,6 @@ function Signup() {
       alert("Signup failed. Please check your credentials.");
     }
   };
-
-  useEffect(() => {
-    async function checkAuth() {
-      const response = await axios.get("http://localhost:3000/auth/check-auth");
-      const authStatus = response.data.status;
-
-      if (authStatus === 200) {
-        navigate("/app/home");
-      }
-    }
-    checkAuth();
-  }, []);
 
   return (
     <div
