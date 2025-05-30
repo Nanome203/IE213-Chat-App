@@ -1,6 +1,3 @@
-import React from 'react'
-import { createRoot } from "react-dom/client";
-import { App } from "../App";
 import logo from '../assets/img/loginChatApp.png'
 import bgLogin from '../assets/img/bg_login.png'
 
