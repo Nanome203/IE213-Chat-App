@@ -29,6 +29,7 @@ function Login() {
         loginInfo
       );
       if (response.data.status === 200) {
+        alert("Login successful!");
         navigate("/app/home");
       }
     } catch (error) {

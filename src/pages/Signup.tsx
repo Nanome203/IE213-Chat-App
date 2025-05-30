@@ -8,28 +8,29 @@ import axios from "axios";
 function Signup() {
   const navigate = useNavigate();
 
-  const [loginInfo, setLoginInfo] = useState({
+  const [signupInfo, setSignupInfo] = useState({
     email: "",
     password: "",
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
-    setLoginInfo((prev) => ({
+    setSignupInfo((prev) => ({
       ...prev,
       [id]: value,
     }));
   };
 
-  const handleLogin = async (e: React.FormEvent<HTMLButtonElement>) => {
+  const handleSignup = async (e: React.FormEvent<HTMLButtonElement>) => {
     e.preventDefault();
     try {
       const response = await axios.post(
         "http://localhost:3000/auth/signup",
-        loginInfo
+        signupInfo
       );
-      if (response.data.status === 200) {
-        navigate("/app/home");
+      if (response.data.status === 201) {
+        alert("Signup successful!");
+        navigate("/app/login");
       }
     } catch (error) {
       alert("Signup failed. Please check your credentials.");
@@ -42,7 +43,7 @@ function Signup() {
       const authStatus = response.data.status;
 
       if (authStatus === 200) {
-        navigate("/home");
+        navigate("/app/home");
       }
     }
     checkAuth();
@@ -179,7 +180,7 @@ function Signup() {
             <button
               className="py-2 px-4 bg-blue-600 hover:bg-blue-700 focus:ring-blue-500 focus:ring-offset-blue-200 text-white w-full transition ease-in duration-200 text-center text-base font-semibold shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 rounded-lg"
               type="submit"
-              onClick={handleLogin}
+              onClick={handleSignup}
             >
               Sign up
             </button>
