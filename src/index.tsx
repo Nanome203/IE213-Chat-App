@@ -3,6 +3,7 @@ import index from "./index.html";
 import hello from "./hello/index.html";
 import swagger from "@elysiajs/swagger";
 import testPlugin from "./utils/testPlugin";
+import { authRoute } from "./backend/auth";
 import cors from "@elysiajs/cors";
 import { ServerWebSocket, Server } from "bun";
 
@@ -24,6 +25,7 @@ const app = new Elysia()
   .use(cors())
   .use(swagger())
   .use(testPlugin())
+  .use(authRoute)
   .get("/api/hello", () => ({
     message: "Hello, world!",
     method: "GET",
