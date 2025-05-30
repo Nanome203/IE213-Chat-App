@@ -8,6 +8,9 @@ const app = new Elysia()
   .use(swagger())
   .use(testPlugin())
   .use(authRoute)
+  .get("/", ({ redirect }) => {
+    return redirect("/app");
+  })
   .get("/api/hello", () => ({
     message: "Hello, world!",
     method: "GET",
@@ -25,7 +28,8 @@ const app = new Elysia()
 
 Bun.serve({
   routes: {
-    "/": index,
+    "/app": index,
+    "/app/*": index,
   },
   fetch: app.fetch,
   development: process.env.NODE_ENV !== "production" && {

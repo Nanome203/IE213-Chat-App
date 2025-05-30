@@ -1,12 +1,9 @@
-import { APITester } from "./APITester";
-import "./index.css";
-
-import logo from "./logo.svg";
-import Login from "./pages/Login";
-import reactLogo from "./react.svg";
-
 export function App() {
-  return <Login />;
+  return (
+    <div className="text-center text-9xl text-red-600">
+      WHAT'S UP HOMIE IT'S TONY!!!!!!
+    </div>
+  );
 }
 
 export default App;

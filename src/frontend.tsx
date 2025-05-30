@@ -8,17 +8,20 @@
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter, Navigate, RouterProvider } from "react-router";
 import Login from "./pages/Login";
-import { APITester } from "./APITester";
+// import { APITester } from "./APITester";
 import Layout from "./components/Layout";
+import App from "./App";
+import Signup from "./pages/Signup";
 
 const routerConfig = createBrowserRouter([
   {
-    path: "/",
+    path: "/app",
     element: <Layout />,
     children: [
       { index: true, element: <Navigate to="login" /> },
-      { path: "home", element: <APITester /> },
+      { path: "home", element: <App /> },
       { path: "login", element: <Login /> },
+      { path: "signup", element: <Signup /> },
     ],
     errorElement: <div>Error loading the app.</div>,
   },
