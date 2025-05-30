@@ -99,4 +99,10 @@ export const authRoute = new Elysia({ prefix: "/auth" })
       status: 200,
       message: "Logout successfully",
     };
+  })
+  .get("/check-auth", () => {
+    return {
+      status: 200,
+      message: "User is authenticated",
+    };
   });

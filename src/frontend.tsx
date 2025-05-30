@@ -6,11 +6,27 @@
  */
 
 import { createRoot } from "react-dom/client";
-import { App } from "./App";
+import { createBrowserRouter, Navigate, RouterProvider } from "react-router";
+import Login from "./pages/Login";
+import { APITester } from "./APITester";
+import Layout from "./components/Layout";
+
+const routerConfig = createBrowserRouter([
+  {
+    path: "/",
+    element: <Layout />,
+    children: [
+      { index: true, element: <Navigate to="login" /> },
+      { path: "home", element: <APITester /> },
+      { path: "login", element: <Login /> },
+    ],
+    errorElement: <div>Error loading the app.</div>,
+  },
+]);
 
 function start() {
   const root = createRoot(document.getElementById("root")!);
-  root.render(<App />);
+  root.render(<RouterProvider router={routerConfig} />);
 }
 
 if (document.readyState === "loading") {
