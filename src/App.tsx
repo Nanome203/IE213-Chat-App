@@ -7,7 +7,9 @@ import { authContext } from "./context";
 import axios from "axios";
 
 export function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    localStorage.getItem("loginState") === "true"
+  );
 
   const routerConfig = createBrowserRouter([
     {

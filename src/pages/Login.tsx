@@ -7,7 +7,7 @@ import { authContext } from "@/context";
 
 function Login() {
   const navigate = useNavigate();
-  const { setIsLoggedIn } = useContext(authContext);
+  const { isLoggedIn, setIsLoggedIn } = useContext(authContext);
 
   const [loginInfo, setLoginInfo] = useState({
     email: "",
@@ -31,6 +31,7 @@ function Login() {
       if (response.data.status === 200) {
         alert("Login successful!");
         setIsLoggedIn(true);
+        localStorage.setItem("loginState", "true");
         navigate("/app/home");
       }
     } catch (error) {
@@ -38,7 +39,9 @@ function Login() {
     }
   };
 
-  return (
+  return isLoggedIn ? (
+    <></>
+  ) : (
     <div
       className="relative flex justify-center items-center h-screen w-screen"
       style={{
