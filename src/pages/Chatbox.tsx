@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Phone, Video, Info } from 'lucide-react';
+import NoChatSelected from '@/components/NoChatSelected';
 
 // data mẫu, sau này sẽ call api
 const users = [
@@ -24,7 +25,11 @@ function Chatbox() {
                 <div className="p-4 border-b border-[#6a5dad]">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
-                            <img src="https://i.pravatar.cc/40?img=99" className="w-9 h-9 rounded-full" />
+                            <div className='avatar'>
+                                <div className="w-10 rounded-full">
+                                    <img src="https://img.daisyui.com/images/profile/demo/yellingwoman@192.webp" />
+                                </div>
+                            </div>
                             <span className="font-semibold">My name</span>
                         </div>
                     </div>
@@ -81,8 +86,11 @@ function Chatbox() {
                     </div>
 
                     <div className="mb-3 flex gap-2 text-sm">
-                        <button className="bg-[#6a5dad] px-2 py-1 rounded hover:bg-[#7b6fc3]">Tất cả</button>
-                        <button className="bg-[#6a5dad] px-2 py-1 rounded hover:bg-[#7b6fc3]">Online</button>
+                        <div className="filter">
+                            <input className="btn bg-[#778ff9] text-white  filter-reset" type="radio" name="metaframeworks" aria-label="All" />
+                            <input className="btn bg-[#778ff9] text-white " type="radio" name="metaframeworks" aria-label="Online" />
+                            <input className="btn bg-[#778ff9] text-white " type="radio" name="metaframeworks" aria-label="Chưa xem" />
+                        </div>
                     </div>
 
                     <div className='flex items-center justify-between mb-2'>
@@ -100,11 +108,16 @@ function Chatbox() {
                                 onClick={() => setSelectedUser(user)}
                                 className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-[#6a5dad] transition"
                             >
-                                <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full" />
-                                <div>
-                                    <p className="font-medium">{user.name}</p>
-                                    <p className={`text-sm ${user.active ? 'text-green-400' : 'text-gray-300'}`}>
-                                        ● {user.active ? 'Đang hoạt động' : 'Ngoại tuyến'}
+                                <div className={`avatar ${user.active ? 'avatar-online' : 'avatar-offline'}`}>
+                                    <div className="w-10 rounded-full">
+                                        <img src={user.avatar} alt={user.name} />
+                                    </div>
+                                </div>
+                                {/* Thông tin người dùng */}
+                                <div className="flex-1 min-w-0">
+                                    <p className="font-medium truncate">{user.name}</p>
+                                    <p className="text-sm text-gray-300 truncate">
+                                        No messages yet
                                     </p>
                                 </div>
                             </li>
@@ -258,9 +271,7 @@ function Chatbox() {
                         </div>
                     </>
                 ) : (
-                    <div className="flex-1 flex items-center justify-center text-gray-500 text-xl">
-                        <p>Hãy chọn một người để bắt đầu trò chuyện 👈</p>
-                    </div>
+                    <NoChatSelected />
                 )}
             </main>
         </div>
