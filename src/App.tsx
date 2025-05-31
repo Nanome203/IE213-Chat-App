@@ -43,11 +43,18 @@ export function App() {
 
   useEffect(() => {
     async function checkAuth() {
-      const response = await axios.get("http://localhost:3000/auth/check-auth");
-      const authStatus = response.data.status;
+      try {
+        const response = await axios.get(
+          "http://localhost:3000/auth/check-auth"
+        );
+        const authStatus = response.data.status;
 
-      if (authStatus === 200) {
-        setIsLoggedIn(true);
+        if (authStatus === 200) {
+          setIsLoggedIn(true);
+        }
+      } catch (error) {
+        console.error("Error checking authentication:", error);
+        setIsLoggedIn(false);
       }
     }
     checkAuth();
