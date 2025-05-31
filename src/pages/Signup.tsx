@@ -1,12 +1,13 @@
 import logo from "../assets/img/loginChatApp.png";
 import bgLogin from "../assets/img/bg_login.png";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import axios from "axios";
+import { authContext } from "@/context";
 
 function Signup() {
   const navigate = useNavigate();
-
+  const { isLoggedIn } = useContext(authContext);
   const [signupInfo, setSignupInfo] = useState({
     email: "",
     password: "",
@@ -36,7 +37,9 @@ function Signup() {
     }
   };
 
-  return (
+  return isLoggedIn ? (
+    <></>
+  ) : (
     <div
       className="relative flex justify-center items-center h-screen w-screen"
       style={{
