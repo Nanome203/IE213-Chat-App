@@ -12,6 +12,7 @@ export const authRoute = new Elysia({ prefix: "/auth" })
       secret: process.env.JWT_SECRET!,
     })
   )
+  .use(protectedRoute)
   .model({
     authData: t.Object({
       email: t.String({ format: "email" }),
@@ -92,11 +93,28 @@ export const authRoute = new Elysia({ prefix: "/auth" })
       body: "authData",
     }
   )
-  .use(protectedRoute)
-  .post("/logout", ({ cookie: { authjwt } }) => {
-    authjwt.remove();
-    return {
-      status: 200,
-      message: "Logout successfully",
-    };
-  });
+  .post(
+    "/logout",
+    ({ cookie: { authjwt } }) => {
+      authjwt.remove();
+      return {
+        status: 200,
+        message: "Logout successfully",
+      };
+    },
+    {
+      checkInvalidToken: true,
+    }
+  )
+  .get(
+    "/check-auth",
+    () => {
+      return {
+        status: 200,
+        message: "User is authenticated",
+      };
+    },
+    {
+      checkInvalidToken: true,
+    }
+  );
