@@ -21,8 +21,15 @@ function Signup() {
     }));
   };
 
-  const handleSignup = async (e: React.FormEvent<HTMLButtonElement>) => {
-    e.preventDefault();
+  const handleSignup = async () => {
+    if (signupInfo.email === "" || signupInfo.password === "") {
+      alert("Please fill in all fields.");
+      return;
+    }
+    if (signupInfo.password.length < 8) {
+      alert("Password must be at least 8 characters long.");
+      return;
+    }
     try {
       const response = await axios.post(
         "http://localhost:3000/auth/signup",

@@ -2,9 +2,10 @@ import logo from "../assets/img/loginChatApp.png";
 import bgLogin from "../assets/img/bg_login.png";
 import rickRollGif from "../assets/img/rick-roll.gif";
 import { useContext, useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
 import axios from "axios";
 import { authContext } from "@/context";
+import { log } from "console";
 
 function Login() {
   // const navigate = useNavigate();
@@ -24,7 +25,15 @@ function Login() {
     }));
   };
 
-  const handleLogin = async (e: React.FormEvent<HTMLButtonElement>) => {
+  const handleLogin = async () => {
+    if (loginInfo.email === "" || loginInfo.password === "") {
+      alert("Please fill in all fields.");
+      return;
+    }
+    if (loginInfo.password.length < 8) {
+      alert("Password must be at least 8 characters long.");
+      return;
+    }
     try {
       const response = await axios.post(
         "http://localhost:3000/auth/login",
@@ -104,12 +113,12 @@ function Login() {
             />
           </div>
           <div className="text-right mb-4">
-            <a
+            <Link
               className="text-xs font-display font-semibold text-gray-500 hover:text-blue-700 cursor-pointer"
-              href="#"
+              to={"/app/forget-password"}
             >
               Forgot Password?
-            </a>
+            </Link>
           </div>
           <div className="flex justify-center w-full items-center">
             <div>
