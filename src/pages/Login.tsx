@@ -1,5 +1,6 @@
 import logo from "../assets/img/loginChatApp.png";
 import bgLogin from "../assets/img/bg_login.png";
+import rickRollGif from "../assets/img/rick-roll.gif";
 import { useContext, useState } from "react";
 import { Link } from "react-router";
 import axios from "axios";
@@ -14,6 +15,7 @@ function Login() {
     email: "",
     password: "",
   });
+  const [isRickRoll, setIsRickRoll] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -38,9 +40,9 @@ function Login() {
         loginInfo
       );
       if (response.data.status === 200) {
-        setIsLoggedIn(true);
-        localStorage.setItem("loginState", "true");
-        alert("Login successful!");
+        // alert("Login successful!");
+        setIsRickRoll(true);
+        // alert("Login successful!");
         // navigate("/app/home");
       } else {
         alert("Login failed. Please check your credentials.");
@@ -50,7 +52,26 @@ function Login() {
     }
   };
 
-  return isLoggedIn ? (
+  return isRickRoll ? (
+    <div className="flex justify-center items-center h-full">
+      <dialog
+        open
+        className="p-6 bg-white text-black rounded shadow-lg justify-self-center"
+      >
+        <h2 className="text-center text-2xl">Login successful!</h2>
+        <button
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition cursor-pointer"
+          onClick={() => {
+            setIsLoggedIn(true);
+            localStorage.setItem("loginState", "true");
+          }}
+        >
+          Close
+        </button>
+        <img src={rickRollGif} alt="Rick Rolled" className="mt-4 max-w-full" />
+      </dialog>
+    </div>
+  ) : isLoggedIn ? (
     <></>
   ) : (
     <div

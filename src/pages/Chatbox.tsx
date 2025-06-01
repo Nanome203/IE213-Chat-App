@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Phone, Video, Info, ArrowDown } from "lucide-react";
 import NoChatSelected from "@/components/NoChatSelected";
 import bgLogin from "../assets/img/bg_login.png";
+import logOutGif from "../assets/img/log-out.gif";
 import MenuDropdown from "@/components/MenuDropdown";
 import MessageInput from "@/components/MessageInput";
 import axios from "axios";
@@ -38,14 +39,14 @@ interface User {
 function Chatbox() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const { setIsLoggedIn } = React.useContext(authContext);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
       const response = await axios.post("http://localhost:3000/auth/logout");
       if (response.data.status === 200) {
-        localStorage.removeItem("loginState");
-        setIsLoggedIn(false);
-        alert(response.data.message);
+        setIsDialogOpen(true);
+        // alert(response.data.message);
       } else {
         alert("Logout failed. Please try again.");
       }
@@ -55,7 +56,26 @@ function Chatbox() {
     }
   };
 
-  return (
+  return isDialogOpen ? (
+    <div className="flex justify-center items-center h-full">
+      <dialog
+        open
+        className="p-6 bg-white text-black rounded shadow-lg justify-self-center"
+      >
+        <h2 className="text-center text-2xl">Logout successful!</h2>
+        <button
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition cursor-pointer"
+          onClick={() => {
+            localStorage.removeItem("loginState");
+            setIsLoggedIn(false);
+          }}
+        >
+          Close
+        </button>
+        <img src={logOutGif} alt="Log Out" className="mt-4 max-w-full" />
+      </dialog>
+    </div>
+  ) : (
     <div
       className="h-screen w-screen"
       style={{
