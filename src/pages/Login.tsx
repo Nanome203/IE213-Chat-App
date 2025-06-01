@@ -33,6 +33,7 @@ function Login() {
       if (response.data.status === 200) {
         // alert("Login successful!");
         setIsRickRoll(true);
+        // alert("Login successful!");
         // navigate("/app/home");
       } else {
         alert("Login failed. Please check your credentials.");
@@ -50,7 +51,7 @@ function Login() {
       >
         <h2 className="text-center text-2xl">Login successful!</h2>
         <button
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition cursor-pointer"
           onClick={() => {
             setIsLoggedIn(true);
             localStorage.setItem("loginState", "true");
