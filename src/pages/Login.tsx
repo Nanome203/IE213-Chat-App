@@ -1,6 +1,7 @@
 import logo from "../assets/img/loginChatApp.png";
 import bgLogin from "../assets/img/bg_login.png";
 import rickRollGif from "../assets/img/rick-roll.gif";
+import rickRollGif from "../assets/img/rick-roll.gif";
 import { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import axios from "axios";
@@ -14,6 +15,7 @@ function Login() {
     email: "",
     password: "",
   });
+  const [isRickRoll, setIsRickRoll] = useState(false);
   const [isRickRoll, setIsRickRoll] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -31,6 +33,8 @@ function Login() {
         loginInfo
       );
       if (response.data.status === 200) {
+        // alert("Login successful!");
+        setIsRickRoll(true);
         // alert("Login successful!");
         setIsRickRoll(true);
         // navigate("/app/home");
