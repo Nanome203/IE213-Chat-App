@@ -31,6 +31,10 @@ function Signup() {
       if (response.data.status === 201) {
         alert("Signup successful!");
         navigate("/app/login");
+      } else if (response.data.status === 409) {
+        alert("Email already exists. Please use a different email.");
+      } else {
+        alert("Signup failed. Please try again.");
       }
     } catch (error) {
       alert("Signup failed. Please check your credentials.");
