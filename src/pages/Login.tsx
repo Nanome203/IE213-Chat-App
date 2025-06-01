@@ -6,7 +6,7 @@ import axios from "axios";
 import { authContext } from "@/context";
 
 function Login() {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const { isLoggedIn, setIsLoggedIn } = useContext(authContext);
 
   const [loginInfo, setLoginInfo] = useState({
@@ -29,10 +29,12 @@ function Login() {
         loginInfo
       );
       if (response.data.status === 200) {
-        alert("Login successful!");
         setIsLoggedIn(true);
         localStorage.setItem("loginState", "true");
-        navigate("/app/home");
+        alert("Login successful!");
+        // navigate("/app/home");
+      } else {
+        alert("Login failed. Please check your credentials.");
       }
     } catch (error) {
       alert("Login failed. Please check your credentials.");

@@ -1,7 +1,8 @@
 import { createBrowserRouter, Navigate, RouterProvider } from "react-router";
-import Login from "./pages/Login";
 import Layout from "./components/Layout";
 import Signup from "./pages/Signup";
+import Chatbox from "./pages/Chatbox";
+import Login from "./pages/Login";
 import { useEffect, useState } from "react";
 import { authContext } from "./context";
 import axios from "axios";
@@ -22,13 +23,7 @@ export function App() {
         },
         {
           path: "home",
-          element: isLoggedIn ? (
-            <div className="text-center text-9xl text-red-600">
-              WHAT'S UP HOMIE IT'S TONY!!!!!!
-            </div>
-          ) : (
-            <Navigate to="/app/login" />
-          ),
+          element: isLoggedIn ? <Chatbox /> : <Navigate to="/app/login" />,
         },
         {
           path: "login",
