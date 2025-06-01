@@ -1,5 +1,6 @@
 import logo from "../assets/img/loginChatApp.png";
 import bgLogin from "../assets/img/bg_login.png";
+import rickRollGif from "../assets/img/rick-roll.gif";
 import { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import axios from "axios";
@@ -57,11 +58,7 @@ function Login() {
         >
           Close
         </button>
-        <img
-          src="https://media1.tenor.com/m/x8v1oNUOmg4AAAAd/rickroll-roll.gif"
-          alt="Rick Rolled"
-          className="mt-4 max-w-full"
-        />
+        <img src={rickRollGif} alt="Rick Rolled" className="mt-4 max-w-full" />
       </dialog>
     </div>
   ) : isLoggedIn ? (
