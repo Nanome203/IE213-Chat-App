@@ -6,6 +6,8 @@ import Login from "./pages/Login";
 import { useEffect, useState } from "react";
 import { authContext } from "./context";
 import axios from "axios";
+import ForgetPassword from "./pages/ForgetPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 export function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(
@@ -33,8 +35,20 @@ export function App() {
           path: "signup",
           element: isLoggedIn ? <Navigate to="/app/home" /> : <Signup />,
         },
+        {
+          path: "forget-password",
+          element: isLoggedIn ? (
+            <Navigate to="/app/home" />
+          ) : (
+            <ForgetPassword />
+          ),
+        },
+        {
+          path: "reset-password",
+          element: isLoggedIn ? <Navigate to="/app/home" /> : <ResetPassword />,
+        },
       ],
-      errorElement: <div>Error loading the app.</div>,
+      errorElement: <Navigate to={`/app/${isLoggedIn ? "home" : "login"}`} />,
     },
   ]);
 

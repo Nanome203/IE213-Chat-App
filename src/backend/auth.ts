@@ -4,8 +4,18 @@ import { eq } from "drizzle-orm";
 import { users } from "drizzle/schema";
 import Elysia, { t } from "elysia";
 import { protectedRoute } from "./middleware";
+import nodemailer from "nodemailer";
+
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GOOGLE_APP_PASS,
+  },
+});
 
 export const authRoute = new Elysia({ prefix: "/auth" })
+  .state("email", "")
   .use(
     jwt({
       name: "jwt",
@@ -17,6 +27,10 @@ export const authRoute = new Elysia({ prefix: "/auth" })
     authData: t.Object({
       email: t.String({ format: "email" }),
       password: t.String({ minLength: 8 }),
+    }),
+
+    resetData: t.Object({
+      email: t.String({ format: "email" }),
     }),
   })
   .post(
@@ -116,5 +130,52 @@ export const authRoute = new Elysia({ prefix: "/auth" })
     },
     {
       checkInvalidToken: true,
+    }
+  )
+  .post(
+    "/forget-password",
+    async ({ body: { email }, store }) => {
+      await transporter.sendMail({
+        from: process.env.GMAIL_USER,
+        to: email,
+        subject: "Reset your password",
+        text: "Reset your password using this link:\nhttp://localhost:3000/app/reset-password",
+      });
+      store.email = email; // Store email in state for later use
+      return {
+        status: 201,
+        message: "Reset password email sent successfully",
+      };
+    },
+    {
+      body: "resetData",
+    }
+  )
+  .post(
+    "/reset-password",
+    async ({ store: { email }, body: { password } }) => {
+      const hashedPassword = await Bun.password.hash(password, {
+        algorithm: "bcrypt",
+      });
+      try {
+        await db
+          .update(users)
+          .set({ password: hashedPassword })
+          .where(eq(users.email, email));
+        return {
+          status: 201,
+          message: "Change password successfully",
+        };
+      } catch {
+        return {
+          status: 400,
+          message: "Failed to change password",
+        };
+      }
+    },
+    {
+      body: t.Object({
+        password: t.String({ minLength: 8 }),
+      }),
     }
   );
