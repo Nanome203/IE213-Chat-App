@@ -10,6 +10,7 @@
     @apply grid place-items-center min-w-[320px] min-h-screen relative m-0;
   }
 } */
+@plugin "tailwindcss-animate";
 
 html,
 body,
