@@ -34,7 +34,6 @@ function Login() {
         // alert("Login successful!");
         setIsRickRoll(true);
         // alert("Login successful!");
-        setIsRickRoll(true);
         // navigate("/app/home");
       } else {
         alert("Login failed. Please check your credentials.");
