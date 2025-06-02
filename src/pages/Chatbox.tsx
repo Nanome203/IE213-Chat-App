@@ -102,6 +102,10 @@ function Chatbox() {
                         onClick: () => console.log("Profile"),
                       },
                       {
+                        label: "Add Friend",
+                        onClick: () => console.log("Add Friend"),
+                      },
+                      {
                         label: "Logout",
                         onClick: handleLogout,
                       },
@@ -199,9 +203,8 @@ function Chatbox() {
                     className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-[#6a5dad] transition"
                   >
                     <div
-                      className={`avatar ${
-                        user.active ? "avatar-online" : "avatar-offline"
-                      }`}
+                      className={`avatar ${user.active ? "avatar-online" : "avatar-offline"
+                        }`}
                     >
                       <div className="w-10 rounded-full">
                         <img src={user.avatar} alt={user.name} />
@@ -237,11 +240,10 @@ function Chatbox() {
                             {selectedUser.name}
                           </p>
                           <p
-                            className={`text-sm ${
-                              selectedUser.active
+                            className={`text-sm ${selectedUser.active
                                 ? "text-green-500"
                                 : "text-gray-500"
-                            }`}
+                              }`}
                           >
                             ● {selectedUser.active ? "Active now" : "Offline"}
                           </p>

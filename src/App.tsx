@@ -8,6 +8,7 @@ import { authContext } from "./context";
 import axios from "axios";
 import ForgetPassword from "./pages/ForgetPassword";
 import ResetPassword from "./pages/ResetPassword";
+import Profile from "./pages/Profile";
 
 export function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(
@@ -26,6 +27,10 @@ export function App() {
         {
           path: "home",
           element: isLoggedIn ? <Chatbox /> : <Navigate to="/app/login" />,
+        },
+        {
+          path: "profile",
+          element: isLoggedIn ? <Profile /> : <Navigate to="/app/login" />,
         },
         {
           path: "login",
