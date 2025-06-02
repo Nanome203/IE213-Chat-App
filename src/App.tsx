@@ -44,7 +44,7 @@ export function App() {
           ),
         },
         {
-          path: "reset-password",
+          path: "reset-password/:id",
           element: isLoggedIn ? <Navigate to="/app/home" /> : <ResetPassword />,
         },
       ],

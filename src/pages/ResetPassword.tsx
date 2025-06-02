@@ -1,12 +1,13 @@
 import logo from "../assets/img/loginChatApp.png";
 import bgLogin from "../assets/img/bg_login.png";
 import { useContext, useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import axios from "axios";
 import { authContext } from "@/context";
 
 function ResetPassword() {
   const navigate = useNavigate();
+  const { id } = useParams();
   const { isLoggedIn } = useContext(authContext);
   const [pass, setPass] = useState({
     pass: "",
@@ -36,7 +37,7 @@ function ResetPassword() {
     }
     try {
       const response = await axios.post(
-        "http://localhost:3000/auth/reset-password",
+        `http://localhost:3000/auth/reset-password/${id}`,
         {
           password: pass.pass,
         }

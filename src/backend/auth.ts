@@ -14,8 +14,9 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+const emailRecords: Record<string, string> = {};
+
 export const authRoute = new Elysia({ prefix: "/auth" })
-  .state("email", "")
   .use(
     jwt({
       name: "jwt",
@@ -134,14 +135,21 @@ export const authRoute = new Elysia({ prefix: "/auth" })
   )
   .post(
     "/forget-password",
-    async ({ body: { email }, store }) => {
+    async ({ body: { email } }) => {
+      const hashedEmail = (
+        await Bun.password.hash(email, {
+          algorithm: "bcrypt",
+        })
+      ).replace(/[$/]/g, "");
+      console.log("Hashed Email:", hashedEmail);
       await transporter.sendMail({
         from: process.env.GMAIL_USER,
         to: email,
         subject: "Reset your password",
-        text: "Reset your password using this link:\nhttp://localhost:3000/app/reset-password",
+        text: `Reset your password using this link:\nhttp://localhost:3000/app/reset-password/${hashedEmail}`,
       });
-      store.email = email; // Store email in state for later use
+      emailRecords[hashedEmail] = email; // Store email in state for later use
+      console.log(emailRecords[hashedEmail]);
       return {
         status: 201,
         message: "Reset password email sent successfully",
@@ -152,16 +160,17 @@ export const authRoute = new Elysia({ prefix: "/auth" })
     }
   )
   .post(
-    "/reset-password",
-    async ({ store: { email }, body: { password } }) => {
+    "/reset-password/:hashedEmail",
+    async ({ body: { password }, params: { hashedEmail } }) => {
       const hashedPassword = await Bun.password.hash(password, {
         algorithm: "bcrypt",
       });
+      console.log("email:", emailRecords[hashedEmail]);
       try {
         await db
           .update(users)
           .set({ password: hashedPassword })
-          .where(eq(users.email, email));
+          .where(eq(users.email, emailRecords[hashedEmail]));
         return {
           status: 201,
           message: "Change password successfully",
