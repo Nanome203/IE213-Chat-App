@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Phone, Video, Info, ArrowDown } from "lucide-react";
 import NoChatSelected from "@/components/NoChatSelected";
 import bgLogin from "../assets/img/bg_login.png";
+import rickroll from "../assets/img/rick-roll.gif";
 import logOutGif from "../assets/img/log-out.gif";
 import MenuDropdown from "@/components/MenuDropdown";
 import MessageInput from "@/components/MessageInput";
@@ -276,7 +277,7 @@ function Chatbox() {
                 <div
                   className="bg-[#f0e5ff]  min-h-0 max-w-full flex flex-col flex-grow-1"
                   style={{
-                    backgroundImage: `url(https://img.daisyui.com/images/profile/demo/yellingwoman@192.webp)`,
+                    backgroundImage: `url(${rickroll})`,
                     backgroundSize: "cover",
                     backgroundPosition: "center",
                   }}
