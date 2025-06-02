@@ -38,7 +38,11 @@ export const authRoute = new Elysia({ prefix: "/auth" })
     "/login",
     async ({ body: { email, password }, jwt, cookie: { authjwt } }) => {
       const data = await db
-        .select({ email: users.email, hashedPassword: users.password })
+        .select({
+          id: users.id,
+          email: users.email,
+          hashedPassword: users.password,
+        })
         .from(users)
         .where(eq(users.email, email));
       if (data.length === 0) {
@@ -58,11 +62,15 @@ export const authRoute = new Elysia({ prefix: "/auth" })
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
           sameSite: "strict",
-          maxAge: 60 * 60 * 24, // 1 day
+          maxAge:
+            process.env.NODE_ENV === "development"
+              ? 60 * 60 * 24
+              : 60 * 60 * 24 * 365,
         });
         return {
           status: 200,
           message: "Login successful",
+          user: data,
         };
       }
 
