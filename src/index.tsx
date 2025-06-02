@@ -26,6 +26,9 @@ const app = new Elysia()
   .use(swagger())
   .use(testPlugin())
   .use(authRoute)
+  .get("/", ({ redirect }) => {
+    return redirect("/app");
+  })
   .get("/api/hello", () => ({
     message: "Hello, world!",
     method: "GET",
@@ -79,7 +82,8 @@ const app = new Elysia()
 Bun.serve({
   // port: 3000,
   routes: {
-    "/": index,
+    "/app": index,
+    "/app/*": index,
     "/hello": hello,
   },
   // fetch: app.fetch,
@@ -101,8 +105,7 @@ Bun.serve({
         return new Response("WebSocket upgrade failed", { status: 400 });
       }
     }
-
-    return new Response("Not found", { status: 404 });
+    return app.fetch(req);
   },
 
   websocket: {

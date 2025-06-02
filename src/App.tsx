@@ -1,35 +1,80 @@
-// import { APITester } from "./APITester";
-import "./index.css";
-
-import logo from "./logo.svg";
-import reactLogo from "./react.svg";
+import { createBrowserRouter, Navigate, RouterProvider } from "react-router";
+import Layout from "./components/Layout";
+import Signup from "./pages/Signup";
+import Chatbox from "./pages/Chatbox";
+import Login from "./pages/Login";
+import { useEffect, useState } from "react";
+import { authContext } from "./context";
+import axios from "axios";
+import ForgetPassword from "./pages/ForgetPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 export function App() {
-  return (
-    <div className="max-w-7xl mx-auto p-8 text-center relative z-10">
-      <div className="flex justify-center items-center gap-8 mb-8">
-        <img
-          src={logo}
-          alt="Bun Logo"
-          className="h-24 p-6 transition-all duration-300 hover:drop-shadow-[0_0_2em_#646cffaa] scale-120"
-        />
-        <img
-          src={reactLogo}
-          alt="React Logo"
-          className="h-24 p-6 transition-all duration-300 hover:drop-shadow-[0_0_2em_#61dafbaa] animate-[spin_20s_linear_infinite]"
-        />
-      </div>
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    localStorage.getItem("loginState") === "true"
+  );
 
-      <h1 className="text-5xl font-bold my-4 leading-tight">Bun + React</h1>
-      <p>
-        Edit{" "}
-        <code className="bg-[#1a1a1a] px-2 py-1 rounded font-mono">
-          src/App.tsx
-        </code>{" "}
-        and save to test HMR
-      </p>
-      {/* <APITester /> */}
-    </div>
+  const routerConfig = createBrowserRouter([
+    {
+      path: "/app",
+      element: <Layout />,
+      children: [
+        {
+          index: true,
+          element: <Navigate to={`/app/${isLoggedIn ? "home" : "login"}`} />,
+        },
+        {
+          path: "home",
+          element: isLoggedIn ? <Chatbox /> : <Navigate to="/app/login" />,
+        },
+        {
+          path: "login",
+          element: isLoggedIn ? <Navigate to="/app/home" /> : <Login />,
+        },
+        {
+          path: "signup",
+          element: isLoggedIn ? <Navigate to="/app/home" /> : <Signup />,
+        },
+        {
+          path: "forget-password",
+          element: isLoggedIn ? (
+            <Navigate to="/app/home" />
+          ) : (
+            <ForgetPassword />
+          ),
+        },
+        {
+          path: "reset-password/:id",
+          element: isLoggedIn ? <Navigate to="/app/home" /> : <ResetPassword />,
+        },
+      ],
+      errorElement: <Navigate to={`/app/${isLoggedIn ? "home" : "login"}`} />,
+    },
+  ]);
+
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const response = await axios.get(
+          "http://localhost:3000/auth/check-auth"
+        );
+        const authStatus = response.data.status;
+
+        if (authStatus === 200) {
+          setIsLoggedIn(true);
+        }
+      } catch (error) {
+        console.error("Error checking authentication:", error);
+        setIsLoggedIn(false);
+      }
+    }
+    checkAuth();
+  }, []);
+
+  return (
+    <authContext.Provider value={{ isLoggedIn, setIsLoggedIn }}>
+      <RouterProvider router={routerConfig} />
+    </authContext.Provider>
   );
 }
 
