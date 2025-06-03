@@ -3,11 +3,13 @@ import index from "./index.html";
 import swagger from "@elysiajs/swagger";
 import testPlugin from "./utils/testPlugin";
 import { authRoute } from "./backend/auth";
+import { userRoute } from "./backend/userRoute";
 
 const app = new Elysia()
   .use(swagger())
   .use(testPlugin())
   .use(authRoute)
+  .use(userRoute)
   .get("/", ({ redirect }) => {
     return redirect("/app");
   })
