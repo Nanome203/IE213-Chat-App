@@ -4,14 +4,15 @@ module.exports = {
     content: ["./src/**/*.{js,ts,jsx,tsx}"], // tuỳ vào dự án bạn
     theme: {
         extend: {
-            animation: {
-                'fade-in': 'fadeIn 0.2s ease-out forwards',
-            },
             keyframes: {
-                fadeIn: {
-                    '0%': { opacity: '0', transform: 'scale(95%)' },
-                    '100%': { opacity: '1', transform: 'scale(100%)' },
+                growFadeOut: {
+                    '0%': { transform: 'scale(1)' },
+                    '50%': { transform: 'scale(1.5)' },
+                    '100%': { transform: 'scale(2)' },
                 },
+            },
+            animation: {
+                'Triet': 'growFadeOut 5s ease-out forwards',
             },
         },
     },

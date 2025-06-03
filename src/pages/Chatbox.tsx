@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Phone, Video, Info, ArrowDown } from "lucide-react";
+import { Phone, Video, Info, ArrowDown, User, UserPlus, LogOutIcon, BellIcon, Ellipsis } from "lucide-react";
 import NoChatSelected from "@/components/NoChatSelected";
 import bgLogin from "../assets/img/bg_login.png";
 import rickroll from "../assets/img/rick-roll.gif";
@@ -40,6 +40,8 @@ interface User {
 function Chatbox() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const { setIsLoggedIn } = React.useContext(authContext);
+  const [showToast, setShowToast] = useState(false);
+
 
   const handleLogout = async () => {
     try {
@@ -48,6 +50,7 @@ function Chatbox() {
         (
           document.getElementById("logout-message") as HTMLDialogElement
         ).showModal();
+        setShowToast(true);
         setTimeout(() => {
           localStorage.removeItem("loginState");
           setIsLoggedIn(false);
@@ -64,10 +67,17 @@ function Chatbox() {
   return (
     <>
       <dialog className="modal" id="logout-message">
-        <div className="modal-box bg-white">
-          <h2 className="text-center text-5xl text-black">
-            Logout successful!
-          </h2>
+        {showToast && (
+          <div className="toast toast-top toast-end z-1000 animate-slide-in" id="login-success">
+            <div role="alert" className="alert alert-success text-neutral-100 text-base font-medium">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Logout successful!</span>
+            </div>
+          </div>
+        )}
+        <div className="modal-box bg-transparent shadow-none">
           <img src={logOutGif} alt="Log Out" className="mt-4 max-w-full" />
         </div>
       </dialog>
@@ -94,15 +104,51 @@ function Chatbox() {
 
                 <div className="flex items-center">
                   <MenuDropdown
+                    triggerIcon={<BellIcon className="w-5 h-5 text-white" />}
+                    menuBgColor="bg-white/80"
+                    menuTextColor="text-gray-600"
+                    customContent={() => (
+                      <div className="flex flex-col gap-4 p-2 max-h-[400px] overflow-y-auto">
+                        {users.map((user) => (
+                          <div key={user.id} className="flex flex-col items-center gap-4">
+                            <div className="flex items-center gap-4">
+                              <div className="avatar">
+                                <div className="w-10 rounded-full">
+                                  <img src={user.avatar} />
+                                </div>
+                              </div>
+                              <p className="text-sm font-medium">{user.name} sent you a friend request</p>
+                            </div>
+                            <div className="flex gap-4 ml-8">
+                              <button className="btn btn-sm btn-success">Accept</button>
+                              <button className="btn btn-sm btn-outline">Decline</button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  />
+
+                  <MenuDropdown
                     position="bottom-right"
                     iconColor="fill-white"
+                    menuBgColor="bg-white/80"
+                    menuTextColor="text-gray-600"
+                    itemHoverColor="hover:bg-[#6a5dad] hover:text-white"
                     items={[
                       {
                         label: "Profile",
+                        icon: <User className="w-5 h-5 mr-2" />,
                         onClick: () => console.log("Profile"),
                       },
                       {
+                        label: "Add Friend",
+                        icon: <UserPlus className="w-5 h-5 mr-2" />,
+                        onClick: () => console.log("Add Friend"),
+                      },
+                      {
                         label: "Logout",
+                        icon: <LogOutIcon className="w-5 h-5 mr-2" />,
                         onClick: handleLogout,
                       },
                     ]}
@@ -164,28 +210,17 @@ function Chatbox() {
                 <p className="text-xs font-semibold uppercase tracking-wide text-gray-300">
                   Messages
                 </p>
-                {/* <p className="text-xs font-semibold tracking-wide text-gray-300">(2) online</p> */}
-                <div className="dropdown dropdown-bottom dropdown-end">
-                  <div
-                    tabIndex={0}
-                    role="button"
-                    className="btn text-xs font-semibold tracking-wide text-gray-300 bg-transparent border-none shadow-none"
-                  >
-                    (2) online
-                    <ArrowDown className="w-4 h-4 ml-1 inline-block" />
-                  </div>
-                  <ul
-                    tabIndex={0}
-                    className="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm"
-                  >
-                    <li>
-                      <a>(2) online</a>
-                    </li>
-                    <li>
-                      <a>chưa xem</a>
-                    </li>
-                  </ul>
-                </div>
+                <MenuDropdown
+                  triggerIcon={<Ellipsis className="w-5 h-5 text-white" />}
+                  menuBgColor="bg-white/80"
+                  menuTextColor="text-gray-600"
+                  customContent={() => (
+                    <ul className="flex flex-col gap-2 rounded-box z-1 w-full">
+                      <li className="cursor-pointer hover:bg-[#6a5dad] hover:text-white p-2 rounded-md"><a>Online</a></li>
+                      <li className="cursor-pointer hover:bg-[#6a5dad] hover:text-white p-2 rounded-md"><a>hehe</a></li>
+                    </ul>
+                  )}
+                />
               </div>
             </div>
 
@@ -199,9 +234,8 @@ function Chatbox() {
                     className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-[#6a5dad] transition"
                   >
                     <div
-                      className={`avatar ${
-                        user.active ? "avatar-online" : "avatar-offline"
-                      }`}
+                      className={`avatar ${user.active ? "avatar-online" : "avatar-offline"
+                        }`}
                     >
                       <div className="w-10 rounded-full">
                         <img src={user.avatar} alt={user.name} />
@@ -237,11 +271,10 @@ function Chatbox() {
                             {selectedUser.name}
                           </p>
                           <p
-                            className={`text-sm ${
-                              selectedUser.active
-                                ? "text-green-500"
-                                : "text-gray-500"
-                            }`}
+                            className={`text-sm ${selectedUser.active
+                              ? "text-green-500"
+                              : "text-gray-500"
+                              }`}
                           >
                             ● {selectedUser.active ? "Active now" : "Offline"}
                           </p>
