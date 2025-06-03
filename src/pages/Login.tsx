@@ -8,6 +8,8 @@ import { authContext } from "@/context";
 
 function Login() {
   const { isLoggedIn, setIsLoggedIn } = useContext(authContext);
+  const [showModal, setShowModal] = useState(false);
+  const [showToast, setShowToast] = useState(false);
 
   const [loginInfo, setLoginInfo] = useState({
     email: "",
@@ -37,11 +39,15 @@ function Login() {
         loginInfo
       );
       if (response.data.status === 200) {
-        (document.getElementById("rickroll") as HTMLDialogElement).showModal();
+        setShowModal(true);
         setTimeout(() => {
-          setIsLoggedIn(true);
-          localStorage.setItem("loginState", "true");
-        }, 1500);
+          setShowToast(true);
+          setTimeout(() => {
+            setIsLoggedIn(true);
+            localStorage.setItem("loginState", "true");
+          }, 1000)
+        }, 1000);
+
       } else {
         alert("Login failed. Please check your credentials.");
       }
@@ -54,16 +60,17 @@ function Login() {
     <></>
   ) : (
     <>
-      <dialog className="modal" id="rickroll">
-        <div className="modal-box bg-white">
-          <h2 className="text-center text-5xl text-black">Login successful!</h2>
-          <img
-            src={rickRollGif}
-            alt="Rick Rolled"
-            className="mt-4 max-w-full"
-          />
-        </div>
-      </dialog>
+      {
+        showModal && (<dialog className="modal" open id="rickroll">
+          <div className="modal-box bg-transparent shadow-none animate-grow-fade-out-scale delay-[1000ms]">
+            <img
+              src={rickRollGif}
+              alt="Rick Rolled"
+              className="mt-4 max-w-full"
+            />
+          </div>
+        </dialog>)
+      }
       <div
         className="relative flex justify-center items-center h-screen w-screen"
         style={{
@@ -72,6 +79,17 @@ function Login() {
           backgroundPosition: "center",
         }}
       >
+        {showToast && (
+          <div className="toast toast-top toast-end z-1000 animate-slide-in" id="login-success">
+            <div role="alert" className="alert alert-success text-neutral-100 text-base font-medium">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Login successful!</span>
+            </div>
+          </div>
+        )}
+
         <div className="relative px-4 py-10 bg-white/50 bg-blur-md p-5 mx-8 md:mx-0 shadow rounded-3xl sm:p-10 h-fit animate-in slide-in-from-top">
           <div className="flex flex-col justify-center items-center">
             <img src={logo} alt="" className="h-48 w-48" />

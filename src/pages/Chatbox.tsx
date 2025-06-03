@@ -40,6 +40,8 @@ interface User {
 function Chatbox() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const { setIsLoggedIn } = React.useContext(authContext);
+  const [showToast, setShowToast] = useState(false);
+
 
   const handleLogout = async () => {
     try {
@@ -48,6 +50,7 @@ function Chatbox() {
         (
           document.getElementById("logout-message") as HTMLDialogElement
         ).showModal();
+        setShowToast(true);
         setTimeout(() => {
           localStorage.removeItem("loginState");
           setIsLoggedIn(false);
@@ -64,10 +67,17 @@ function Chatbox() {
   return (
     <>
       <dialog className="modal" id="logout-message">
-        <div className="modal-box bg-white">
-          <h2 className="text-center text-5xl text-black">
-            Logout successful!
-          </h2>
+        {showToast && (
+          <div className="toast toast-top toast-end z-1000 animate-slide-in" id="login-success">
+            <div role="alert" className="alert alert-success text-neutral-100 text-base font-medium">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Logout successful!</span>
+            </div>
+          </div>
+        )}
+        <div className="modal-box bg-transparent shadow-none">
           <img src={logOutGif} alt="Log Out" className="mt-4 max-w-full" />
         </div>
       </dialog>
