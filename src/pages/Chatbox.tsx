@@ -1,5 +1,15 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Phone, Video, Info, ArrowDown, User, UserPlus, LogOutIcon, BellIcon, Ellipsis } from "lucide-react";
+import {
+  Phone,
+  Video,
+  Info,
+  ArrowDown,
+  User,
+  UserPlus,
+  LogOutIcon,
+  BellIcon,
+  Ellipsis,
+} from "lucide-react";
 import NoChatSelected from "@/components/NoChatSelected";
 import bgLogin from "../assets/img/bg_login.png";
 import rickroll from "../assets/img/rick-roll.gif";
@@ -18,25 +28,29 @@ interface User {
 }
 
 function Chatbox() {
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [friends, setFriends] = useState<User[]>([])
+  const [selectedUser, setSelectedUser] = useState<User | null>(
+    JSON.parse(localStorage.getItem("selectedUser")!) || null
+  );
+  const [friends, setFriends] = useState<User[]>([]);
   const { setIsLoggedIn } = React.useContext(authContext);
   const [showToast, setShowToast] = useState(false);
   // alert(localStorage.getItem("currentUserId"))
   useEffect(() => {
     async function fetchFriends() {
-      const response = await axios.get(`http://localhost:3000/users/${localStorage.getItem("currentUserId")}/friends`);
+      const response = await axios.get(
+        `http://localhost:3000/users/${localStorage.getItem("currentUserId")}/friends`
+      );
       if (response.data.data.length !== 0) {
-        setFriends(response.data.data)
+        setFriends(response.data.data);
       }
     }
-    fetchFriends()
-  }, [])
+    fetchFriends();
+  }, []);
 
   const handleLogout = async () => {
     try {
       const response = await axios.post("http://localhost:3000/auth/logout", {
-        id: localStorage.getItem("currentUserId")
+        id: localStorage.getItem("currentUserId"),
       });
       if (response.data.status === 200) {
         (
@@ -44,7 +58,7 @@ function Chatbox() {
         ).showModal();
         setShowToast(true);
         setTimeout(() => {
-          localStorage.clear()
+          localStorage.clear();
           setIsLoggedIn(false);
         }, 1000);
       } else {
@@ -60,10 +74,26 @@ function Chatbox() {
     <>
       <dialog className="modal" id="logout-message">
         {showToast && (
-          <div className="toast toast-top toast-end z-1000 animate-slide-in" id="login-success">
-            <div role="alert" className="alert alert-success text-neutral-100 text-base font-medium">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <div
+            className="toast toast-top toast-end z-1000 animate-slide-in"
+            id="login-success"
+          >
+            <div
+              role="alert"
+              className="alert alert-success text-neutral-100 text-base font-medium"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 shrink-0 stroke-current"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
               <span>Logout successful!</span>
             </div>
@@ -91,7 +121,9 @@ function Chatbox() {
                       <img src="https://img.daisyui.com/images/profile/demo/yellingwoman@192.webp" />
                     </div>
                   </div>
-                  <span className="font-semibold">{localStorage.getItem("name")}</span>
+                  <span className="font-semibold">
+                    {localStorage.getItem("name")}
+                  </span>
                 </div>
 
                 <div className="flex items-center">
@@ -102,18 +134,27 @@ function Chatbox() {
                     customContent={() => (
                       <div className="flex flex-col gap-4 p-2 max-h-[400px] overflow-y-auto">
                         {friends.map((friend) => (
-                          <div key={friend.id} className="flex flex-col items-center gap-4">
+                          <div
+                            key={friend.id}
+                            className="flex flex-col items-center gap-4"
+                          >
                             <div className="flex items-center gap-4">
                               <div className="avatar">
                                 <div className="w-10 rounded-full">
                                   <img src={friend.avatar} />
                                 </div>
                               </div>
-                              <p className="text-sm font-medium">{friend.name} sent you a friend request</p>
+                              <p className="text-sm font-medium">
+                                {friend.name} sent you a friend request
+                              </p>
                             </div>
                             <div className="flex gap-4 ml-8">
-                              <button className="btn btn-sm btn-success">Accept</button>
-                              <button className="btn btn-sm btn-outline">Decline</button>
+                              <button className="btn btn-sm btn-success">
+                                Accept
+                              </button>
+                              <button className="btn btn-sm btn-outline">
+                                Decline
+                              </button>
                             </div>
                           </div>
                         ))}
@@ -208,8 +249,12 @@ function Chatbox() {
                   menuTextColor="text-gray-600"
                   customContent={() => (
                     <ul className="flex flex-col gap-2 rounded-box z-1 w-full">
-                      <li className="cursor-pointer hover:bg-[#6a5dad] hover:text-white p-2 rounded-md"><a>Online</a></li>
-                      <li className="cursor-pointer hover:bg-[#6a5dad] hover:text-white p-2 rounded-md"><a>hehe</a></li>
+                      <li className="cursor-pointer hover:bg-[#6a5dad] hover:text-white p-2 rounded-md">
+                        <a>Online</a>
+                      </li>
+                      <li className="cursor-pointer hover:bg-[#6a5dad] hover:text-white p-2 rounded-md">
+                        <a>hehe</a>
+                      </li>
                     </ul>
                   )}
                 />
@@ -222,12 +267,19 @@ function Chatbox() {
                 {friends.map((user) => (
                   <li
                     key={user.id}
-                    onClick={() => setSelectedUser(user)}
+                    onClick={() => {
+                      localStorage.setItem(
+                        "selectedUser",
+                        JSON.stringify(user)
+                      );
+                      setSelectedUser(user);
+                    }}
                     className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-[#6a5dad] transition"
                   >
                     <div
-                      className={`avatar ${user.isOnline ? "avatar-online" : "avatar-offline"
-                        }`}
+                      className={`avatar ${
+                        user.isOnline ? "avatar-online" : "avatar-offline"
+                      }`}
                     >
                       <div className="w-10 rounded-full">
                         <img src={user.avatar} alt={user.name} />
@@ -263,10 +315,11 @@ function Chatbox() {
                             {selectedUser.name}
                           </p>
                           <p
-                            className={`text-sm ${selectedUser.isOnline
-                              ? "text-green-500"
-                              : "text-gray-500"
-                              }`}
+                            className={`text-sm ${
+                              selectedUser.isOnline
+                                ? "text-green-500"
+                                : "text-gray-500"
+                            }`}
                           >
                             ● {selectedUser.isOnline ? "Active now" : "Offline"}
                           </p>
