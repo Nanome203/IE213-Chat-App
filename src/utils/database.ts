@@ -1,11 +1,9 @@
 // Setting up a Drizzle ORM connection with PostgreSQL
 
-import { drizzle } from "drizzle-orm/postgres-js";
-import Elysia from "elysia";
-import postgres from "postgres";
+import { createClient } from "@supabase/supabase-js";
 
-const connectionString = process.env.DATABASE_URL!;
+const supabaseUrl = process.env.SUPABASE_URL!;
+const supabaseKey = process.env.SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Disable prefetch as it is not supported for "Transaction" pool mode
-const client = postgres(connectionString, { prepare: false });
-export const db = drizzle(client);
+export default supabase;
