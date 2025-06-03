@@ -11,6 +11,8 @@ function Signup() {
   const [signupInfo, setSignupInfo] = useState({
     email: "",
     password: "",
+    retypePassword: "",
+    displayName: "",
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -28,6 +30,10 @@ function Signup() {
     }
     if (signupInfo.password.length < 8) {
       alert("Password must be at least 8 characters long.");
+      return;
+    }
+    if (signupInfo.password !== signupInfo.retypePassword) {
+      alert("Password is not the same");
       return;
     }
     try {
@@ -66,10 +72,13 @@ function Signup() {
         </div>
         <div className="max-w-md mx-auto">
           <div className="mt-5">
-            {/* <label
-                            className="font-semibold text-sm text-gray-500 pb-1 block"
-                            htmlFor="login"
-                        >E-mail</label> */}
+            <input
+              className="bg-white border border-neutral-600 focus-visible:outline-blue-700 rounded-lg px-3 py-2 mt-1 mb-5 text-sm text-neutral-800 w-full"
+              type="text"
+              id="displayName"
+              placeholder="Display name"
+              onChange={handleInputChange}
+            />
             <input
               className="bg-white border border-neutral-600 focus-visible:outline-blue-700 rounded-lg px-3 py-2 mt-1 mb-5 text-sm text-neutral-800 w-full"
               type="email"
@@ -77,15 +86,18 @@ function Signup() {
               placeholder="Email"
               onChange={handleInputChange}
             />
-            {/* <label
-                            className="font-semibold text-sm text-gray-600 pb-1 block"
-                            htmlFor="password"
-                        >Password</label> */}
             <input
               className="bg-white border border-neutral-600 focus-visible:outline-blue-700 rounded-lg px-3 py-2 mt-1 mb-5 text-sm text-neutral-800 w-full"
               type="password"
               id="password"
               placeholder="Password"
+              onChange={handleInputChange}
+            />
+            <input
+              className="bg-white border border-neutral-600 focus-visible:outline-blue-700 rounded-lg px-3 py-2 mt-1 mb-5 text-sm text-neutral-800 w-full"
+              type="password"
+              id="retypePassword"
+              placeholder="Retype password"
               onChange={handleInputChange}
             />
           </div>

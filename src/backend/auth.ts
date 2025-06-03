@@ -26,6 +26,7 @@ export const authRoute = new Elysia({ prefix: "/auth" })
     authData: t.Object({
       email: t.String({ format: "email" }),
       password: t.String({ minLength: 8 }),
+      displayName: t.Optional(t.String()),
     }),
 
     resetData: t.Object({
@@ -101,7 +102,7 @@ export const authRoute = new Elysia({ prefix: "/auth" })
   )
   .post(
     "signup",
-    async ({ body: { email, password } }) => {
+    async ({ body: { email, password, displayName } }) => {
       const { data, error } = await supabase
         .from("users")
         .select("existingEmail: email")
@@ -125,8 +126,14 @@ export const authRoute = new Elysia({ prefix: "/auth" })
       const newUser = {
         email,
         password: hashedPassword,
+        name: displayName,
       };
-      await supabase.from("users").insert(newUser);
+      const { error: insertError } = await supabase
+        .from("users")
+        .insert(newUser);
+      if (insertError) {
+        return { status: 500, message: insertError };
+      }
       return {
         status: 201,
         message: "User created successfully",
@@ -148,7 +155,7 @@ export const authRoute = new Elysia({ prefix: "/auth" })
     },
     {
       body: t.Object({
-        id: t.String()
+        id: t.String(),
       }),
       checkInvalidToken: true,
     }
