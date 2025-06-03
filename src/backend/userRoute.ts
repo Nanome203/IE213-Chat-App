@@ -58,7 +58,7 @@ export const userRoute = new Elysia({ prefix: "/users" })
         .select(
           `
           invitorsInfo:users!friends_invitor_fkey(id,name, email, isOnline:is_online, avatar:image_url),
-          invitedsInfo:users!friends_invited_fkey(id,name, email, isOnline:is_online)
+          invitedsInfo:users!friends_invited_fkey(id,name, email, isOnline:is_online, avatar:image_url)
           `
         )
         .or(`invitor.eq.${id}, invited.eq.${id}`);

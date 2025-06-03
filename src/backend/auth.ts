@@ -37,7 +37,7 @@ export const authRoute = new Elysia({ prefix: "/auth" })
     async ({ body: { email, password }, jwt, cookie: { authjwt } }) => {
       const { data: userData, error } = await supabase
         .from("users")
-        .select("id , name , email, hashedPassword:password")
+        .select("id , name , email, hashedPassword:password, avatar:image_url")
         .eq("email", email);
       if (error) {
         return {
@@ -81,6 +81,7 @@ export const authRoute = new Elysia({ prefix: "/auth" })
           name: userData[0].name,
           id: userData[0].id,
           email: userData[0].email,
+          avatar: userData[0].avatar,
         };
         return {
           status: 200,
