@@ -10,12 +10,8 @@ const app = new Elysia()
   .use(testPlugin())
   .use(authRoute)
   .use(userRoute)
-  // .get("/", ({ redirect }) => {
-  //   return redirect("/app");
-  // })
-  .get("/", {
-    message: "hi",
-    say: "hi again",
+  .get("/", ({ redirect }) => {
+    return redirect("/app");
   })
   .get("/api/hello", () => ({
     message: "Hello, world!",
