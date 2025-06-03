@@ -35,7 +35,9 @@ function Chatbox() {
 
   const handleLogout = async () => {
     try {
-      const response = await axios.post("http://localhost:3000/auth/logout");
+      const response = await axios.post("http://localhost:3000/auth/logout", {
+        id: localStorage.getItem("currentUserId")
+      });
       if (response.data.status === 200) {
         (
           document.getElementById("logout-message") as HTMLDialogElement

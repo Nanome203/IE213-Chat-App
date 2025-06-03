@@ -138,14 +138,18 @@ export const authRoute = new Elysia({ prefix: "/auth" })
   )
   .post(
     "/logout",
-    ({ cookie: { authjwt } }) => {
+    async ({ cookie: { authjwt }, body: { id } }) => {
       authjwt.remove();
+      await supabase.from("users").update({ is_online: false }).eq("id", id);
       return {
         status: 200,
         message: "Logout successfully",
       };
     },
     {
+      body: t.Object({
+        id: t.String()
+      }),
       checkInvalidToken: true,
     }
   )
