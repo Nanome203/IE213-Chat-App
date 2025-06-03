@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { CameraIcon } from "lucide-react";
+import { ArrowLeftIcon, CameraIcon } from "lucide-react";
 import bgLogin from "../assets/img/bg_login.png";
 
 function Profile() {
@@ -67,9 +67,15 @@ function Profile() {
                 }}
             >
                 <div className="bg-white/50 backdrop-blur-md rounded-xl p-12 max-w-10/12 min-w-8/12">
-                    <div className="flex flex-col ">
-                        <h1 className="text-3xl font-bold mb-2">User Profile</h1>
-                        <p className="text-gray-600 mb-4">Manage your profile!</p>
+                    <div className="flex justify-between">
+                        <div className="flex flex-col">
+                            <h1 className="text-3xl font-bold mb-2">User Profile</h1>
+                            <p className="text-gray-600 mb-4">Manage your profile!</p>
+                        </div>
+                        <div className="flex mb-10 gap-2 items-center justify-between cursor-pointer text-gray-500 text-base hover:text-gray-800 transition-colors">
+                            <ArrowLeftIcon className="" onClick={() => window.history.back()} />
+                            <p className="">Back</p>
+                        </div>
                     </div>
                     <div className="mt-6 flex gap-8">
                         <div className="flex flex-col items-center justify-center gap-2 border-2 border-gray-300 py-6 px-10 rounded-xl">

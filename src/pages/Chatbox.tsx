@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Phone, Video, Info, ArrowDown } from "lucide-react";
+import { Phone, Video, Info, ArrowDown, User, UserPlus, LogOutIcon, BellIcon, Ellipsis } from "lucide-react";
 import NoChatSelected from "@/components/NoChatSelected";
 import bgLogin from "../assets/img/bg_login.png";
 import rickroll from "../assets/img/rick-roll.gif";
@@ -94,19 +94,51 @@ function Chatbox() {
 
                 <div className="flex items-center">
                   <MenuDropdown
+                    triggerIcon={<BellIcon className="w-5 h-5 text-white" />}
+                    menuBgColor="bg-white/80"
+                    menuTextColor="text-gray-600"
+                    customContent={() => (
+                      <div className="flex flex-col gap-4 p-2 max-h-[400px] overflow-y-auto">
+                        {users.map((user) => (
+                          <div key={user.id} className="flex flex-col items-center gap-4">
+                            <div className="flex items-center gap-4">
+                              <div className="avatar">
+                                <div className="w-10 rounded-full">
+                                  <img src={user.avatar} />
+                                </div>
+                              </div>
+                              <p className="text-sm font-medium">{user.name} sent you a friend request</p>
+                            </div>
+                            <div className="flex gap-4 ml-8">
+                              <button className="btn btn-sm btn-success">Accept</button>
+                              <button className="btn btn-sm btn-outline">Decline</button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  />
+
+                  <MenuDropdown
                     position="bottom-right"
                     iconColor="fill-white"
+                    menuBgColor="bg-white/80"
+                    menuTextColor="text-gray-600"
+                    itemHoverColor="hover:bg-[#6a5dad] hover:text-white"
                     items={[
                       {
                         label: "Profile",
+                        icon: <User className="w-5 h-5 mr-2" />,
                         onClick: () => console.log("Profile"),
                       },
                       {
                         label: "Add Friend",
+                        icon: <UserPlus className="w-5 h-5 mr-2" />,
                         onClick: () => console.log("Add Friend"),
                       },
                       {
                         label: "Logout",
+                        icon: <LogOutIcon className="w-5 h-5 mr-2" />,
                         onClick: handleLogout,
                       },
                     ]}
@@ -168,28 +200,17 @@ function Chatbox() {
                 <p className="text-xs font-semibold uppercase tracking-wide text-gray-300">
                   Messages
                 </p>
-                {/* <p className="text-xs font-semibold tracking-wide text-gray-300">(2) online</p> */}
-                <div className="dropdown dropdown-bottom dropdown-end">
-                  <div
-                    tabIndex={0}
-                    role="button"
-                    className="btn text-xs font-semibold tracking-wide text-gray-300 bg-transparent border-none shadow-none"
-                  >
-                    (2) online
-                    <ArrowDown className="w-4 h-4 ml-1 inline-block" />
-                  </div>
-                  <ul
-                    tabIndex={0}
-                    className="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm"
-                  >
-                    <li>
-                      <a>(2) online</a>
-                    </li>
-                    <li>
-                      <a>chưa xem</a>
-                    </li>
-                  </ul>
-                </div>
+                <MenuDropdown
+                  triggerIcon={<Ellipsis className="w-5 h-5 text-white" />}
+                  menuBgColor="bg-white/80"
+                  menuTextColor="text-gray-600"
+                  customContent={() => (
+                    <ul className="flex flex-col gap-2 rounded-box z-1 w-full">
+                      <li className="cursor-pointer hover:bg-[#6a5dad] hover:text-white p-2 rounded-md"><a>Online</a></li>
+                      <li className="cursor-pointer hover:bg-[#6a5dad] hover:text-white p-2 rounded-md"><a>hehe</a></li>
+                    </ul>
+                  )}
+                />
               </div>
             </div>
 
@@ -241,8 +262,8 @@ function Chatbox() {
                           </p>
                           <p
                             className={`text-sm ${selectedUser.active
-                                ? "text-green-500"
-                                : "text-gray-500"
+                              ? "text-green-500"
+                              : "text-gray-500"
                               }`}
                           >
                             ● {selectedUser.active ? "Active now" : "Offline"}
