@@ -2,7 +2,7 @@ import logo from "../assets/img/loginChatApp.png";
 import bgLogin from "../assets/img/bg_login.png";
 import rickRollGif from "../assets/img/rick-roll.gif";
 import { useContext, useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import axios from "axios";
 import { authContext } from "@/context";
 
@@ -45,6 +45,8 @@ function Login() {
           setTimeout(() => {
             setIsLoggedIn(true);
             localStorage.setItem("loginState", "true");
+            localStorage.setItem("currentUserId", response.data.user.id)
+            localStorage.setItem("name", response.data.user.name)
           }, 1000)
         }, 1000);
 

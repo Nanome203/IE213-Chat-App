@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Phone, Video, Info, ArrowDown, User, UserPlus, LogOutIcon, BellIcon, Ellipsis } from "lucide-react";
 import NoChatSelected from "@/components/NoChatSelected";
 import bgLogin from "../assets/img/bg_login.png";
@@ -8,40 +8,30 @@ import MenuDropdown from "@/components/MenuDropdown";
 import MessageInput from "@/components/MessageInput";
 import axios from "axios";
 import { authContext } from "@/context";
+import { useLocation } from "react-router";
 
-// data mẫu, sau này sẽ call api
-const users = [
-  {
-    id: 1,
-    name: "Jane Doe",
-    avatar: "https://i.pravatar.cc/40?img=1",
-    active: true,
-  },
-  {
-    id: 2,
-    name: "John Smith",
-    avatar: "https://i.pravatar.cc/40?img=2",
-    active: false,
-  },
-  {
-    id: 3,
-    name: "Alice",
-    avatar: "https://i.pravatar.cc/40?img=3",
-    active: true,
-  },
-];
 interface User {
   id: number;
   name: string;
   avatar: string;
-  active: boolean;
+  isOnline: boolean;
 }
 
 function Chatbox() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [friends, setFriends] = useState<User[]>([])
   const { setIsLoggedIn } = React.useContext(authContext);
   const [showToast, setShowToast] = useState(false);
-
+  // alert(localStorage.getItem("currentUserId"))
+  useEffect(() => {
+    async function fetchFriends() {
+      const response = await axios.get(`http://localhost:3000/users/${localStorage.getItem("currentUserId")}/friends`);
+      if (response.data.data.length !== 0) {
+        setFriends(response.data.data)
+      }
+    }
+    fetchFriends()
+  }, [])
 
   const handleLogout = async () => {
     try {
@@ -52,7 +42,7 @@ function Chatbox() {
         ).showModal();
         setShowToast(true);
         setTimeout(() => {
-          localStorage.removeItem("loginState");
+          localStorage.clear()
           setIsLoggedIn(false);
         }, 1000);
       } else {
@@ -99,7 +89,7 @@ function Chatbox() {
                       <img src="https://img.daisyui.com/images/profile/demo/yellingwoman@192.webp" />
                     </div>
                   </div>
-                  <span className="font-semibold">My name</span>
+                  <span className="font-semibold">{localStorage.getItem("name")}</span>
                 </div>
 
                 <div className="flex items-center">
@@ -109,15 +99,15 @@ function Chatbox() {
                     menuTextColor="text-gray-600"
                     customContent={() => (
                       <div className="flex flex-col gap-4 p-2 max-h-[400px] overflow-y-auto">
-                        {users.map((user) => (
-                          <div key={user.id} className="flex flex-col items-center gap-4">
+                        {friends.map((friend) => (
+                          <div key={friend.id} className="flex flex-col items-center gap-4">
                             <div className="flex items-center gap-4">
                               <div className="avatar">
                                 <div className="w-10 rounded-full">
-                                  <img src={user.avatar} />
+                                  <img src={friend.avatar} />
                                 </div>
                               </div>
-                              <p className="text-sm font-medium">{user.name} sent you a friend request</p>
+                              <p className="text-sm font-medium">{friend.name} sent you a friend request</p>
                             </div>
                             <div className="flex gap-4 ml-8">
                               <button className="btn btn-sm btn-success">Accept</button>
@@ -227,14 +217,14 @@ function Chatbox() {
             {/* DANH SÁCH NGƯỜI DÙNG CUỘN ĐƯỢC */}
             <div className="min-h-0 max-w-full flex flex-col flex-grow-1 pt-2">
               <ul className="space-y-2 overflow-x-hidden overflow-y-auto flex flex-col basis-0 flex-grow-1">
-                {users.map((user) => (
+                {friends.map((user) => (
                   <li
                     key={user.id}
                     onClick={() => setSelectedUser(user)}
                     className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-[#6a5dad] transition"
                   >
                     <div
-                      className={`avatar ${user.active ? "avatar-online" : "avatar-offline"
+                      className={`avatar ${user.isOnline ? "avatar-online" : "avatar-offline"
                         }`}
                     >
                       <div className="w-10 rounded-full">
@@ -271,12 +261,12 @@ function Chatbox() {
                             {selectedUser.name}
                           </p>
                           <p
-                            className={`text-sm ${selectedUser.active
+                            className={`text-sm ${selectedUser.isOnline
                               ? "text-green-500"
                               : "text-gray-500"
                               }`}
                           >
-                            ● {selectedUser.active ? "Active now" : "Offline"}
+                            ● {selectedUser.isOnline ? "Active now" : "Offline"}
                           </p>
                         </div>
                       </div>
