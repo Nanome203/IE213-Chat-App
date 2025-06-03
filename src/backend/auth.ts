@@ -35,9 +35,9 @@ export const authRoute = new Elysia({ prefix: "/auth" })
   .post(
     "/login",
     async ({ body: { email, password }, jwt, cookie: { authjwt } }) => {
-      const { data, error } = await supabase
+      const { data: userData, error } = await supabase
         .from("users")
-        .select("email , hashedPassword:password")
+        .select("id , name , email, hashedPassword:password")
         .eq("email", email);
       if (error) {
         return {
@@ -45,7 +45,7 @@ export const authRoute = new Elysia({ prefix: "/auth" })
           message: "Cannot retrieve data",
         };
       }
-      if (data.length === 0) {
+      if (userData.length === 0) {
         return {
           status: 401,
           message: "Invalid email or password",
@@ -54,7 +54,7 @@ export const authRoute = new Elysia({ prefix: "/auth" })
 
       const isMatch = await Bun.password.verify(
         password,
-        data[0].hashedPassword
+        userData[0].hashedPassword
       );
       if (isMatch) {
         authjwt.value = await jwt.sign({ email });
@@ -67,10 +67,25 @@ export const authRoute = new Elysia({ prefix: "/auth" })
               ? 60 * 60 * 24
               : 60 * 60 * 24 * 365,
         });
+        const { data, error } = await supabase
+          .from("users")
+          .update({ is_online: true })
+          .eq("email", email);
+        if (error) {
+          return {
+            status: 500,
+            message: "Cannot change user online status",
+          };
+        }
+        const cleanedUserData = {
+          name: userData[0].name,
+          id: userData[0].id,
+          email: userData[0].email,
+        };
         return {
           status: 200,
           message: "Login successful",
-          user: data,
+          user: cleanedUserData,
         };
       }
 
