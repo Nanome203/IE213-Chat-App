@@ -30,7 +30,7 @@ export const userRoute = new Elysia({ prefix: "/users" })
     async ({ params: { id } }) => {
       const { data, error } = await supabase
         .from("users")
-        .select("name,email, isOnline:is_online")
+        .select("id, name, email, avatar:image_url, phone")
         .eq("id", id);
       if (error) {
         return {
@@ -45,7 +45,7 @@ export const userRoute = new Elysia({ prefix: "/users" })
     },
     {
       params: t.Object({
-        id: t.Number(),
+        id: t.String(),
       }),
       checkInvalidToken: true,
     }
