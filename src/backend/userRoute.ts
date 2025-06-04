@@ -1,7 +1,15 @@
 import Elysia, { t } from "elysia";
 import { protectedRoute } from "./middleware";
 import supabase from "@/utils/database";
-
+type User = {
+  name?: string;
+  password?: string;
+  updated_at?: string;
+  deleted_at?: string;
+  image_url?: string;
+  is_online?: string;
+  phone?: string;
+};
 export const userRoute = new Elysia({ prefix: "/users" })
   .use(protectedRoute)
   .get(
@@ -46,6 +54,72 @@ export const userRoute = new Elysia({ prefix: "/users" })
     {
       params: t.Object({
         id: t.String(),
+      }),
+      checkInvalidToken: true,
+    }
+  )
+  .put(
+    "/:id",
+    async ({ body: { name, password, phone, avatar }, params: { id } }) => {
+      let updatedUser: User = {
+        updated_at: new Date().toISOString(),
+      };
+      if (name) {
+        updatedUser = { ...updatedUser, name: name };
+      }
+      if (password) {
+        const hashedPassword = await Bun.password.hash(password, {
+          algorithm: "bcrypt",
+        });
+        updatedUser = { ...updatedUser, password: hashedPassword };
+      }
+
+      if (phone) {
+        updatedUser = { ...updatedUser, phone: phone };
+      }
+
+      if (avatar) {
+        // do nothing for now
+      }
+
+      try {
+        const { error } = await supabase
+          .from("users")
+          .update(updatedUser)
+          .eq("id", id);
+        if (error) {
+          return {
+            status: 500,
+            message: "Failed to update user profile",
+          };
+        }
+        return {
+          status: 200,
+          data: updatedUser,
+        };
+      } catch (e) {
+        const { error } = await supabase
+          .from("users")
+          .update(updatedUser)
+          .eq("id", id);
+        if (error) {
+          return {
+            status: 500,
+            message: "Failed to update user profile",
+          };
+        }
+        return {
+          status: 200,
+          data: updatedUser,
+        };
+      }
+    },
+    {
+      body: t.Object({
+        name: t.Optional(t.String()),
+        password: t.Optional(t.String({ minLength: 8 })),
+        phone: t.Optional(t.String()),
+        avatar: t.Optional(t.File()),
       }),
       checkInvalidToken: true,
     }
