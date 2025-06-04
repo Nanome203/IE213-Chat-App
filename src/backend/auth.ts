@@ -1,7 +1,5 @@
-import { db } from "@/utils/database";
+import supabase from "@/utils/database";
 import jwt from "@elysiajs/jwt";
-import { eq } from "drizzle-orm";
-import { users } from "drizzle/schema";
 import Elysia, { t } from "elysia";
 import { protectedRoute } from "./middleware";
 import nodemailer from "nodemailer";
@@ -28,6 +26,7 @@ export const authRoute = new Elysia({ prefix: "/auth" })
     authData: t.Object({
       email: t.String({ format: "email" }),
       password: t.String({ minLength: 8 }),
+      displayName: t.Optional(t.String()),
     }),
 
     resetData: t.Object({
@@ -37,11 +36,17 @@ export const authRoute = new Elysia({ prefix: "/auth" })
   .post(
     "/login",
     async ({ body: { email, password }, jwt, cookie: { authjwt } }) => {
-      const data = await db
-        .select({ email: users.email, hashedPassword: users.password })
-        .from(users)
-        .where(eq(users.email, email));
-      if (data.length === 0) {
+      const { data: userData, error } = await supabase
+        .from("users")
+        .select("id , name , email, hashedPassword:password, avatar:image_url")
+        .eq("email", email);
+      if (error) {
+        return {
+          status: 500,
+          message: "Cannot retrieve data",
+        };
+      }
+      if (userData.length === 0) {
         return {
           status: 401,
           message: "Invalid email or password",
@@ -50,7 +55,7 @@ export const authRoute = new Elysia({ prefix: "/auth" })
 
       const isMatch = await Bun.password.verify(
         password,
-        data[0].hashedPassword
+        userData[0].hashedPassword
       );
       if (isMatch) {
         authjwt.value = await jwt.sign({ email });
@@ -58,11 +63,31 @@ export const authRoute = new Elysia({ prefix: "/auth" })
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
           sameSite: "strict",
-          maxAge: 60 * 60 * 24, // 1 day
+          maxAge:
+            process.env.NODE_ENV === "development"
+              ? 60 * 60 * 24
+              : 60 * 60 * 24 * 365,
         });
+        const { data, error } = await supabase
+          .from("users")
+          .update({ is_online: true })
+          .eq("email", email);
+        if (error) {
+          return {
+            status: 500,
+            message: "Cannot change user online status",
+          };
+        }
+        const cleanedUserData = {
+          name: userData[0].name,
+          id: userData[0].id,
+          email: userData[0].email,
+          avatar: userData[0].avatar,
+        };
         return {
           status: 200,
           message: "Login successful",
+          user: cleanedUserData,
         };
       }
 
@@ -77,14 +102,18 @@ export const authRoute = new Elysia({ prefix: "/auth" })
   )
   .post(
     "signup",
-    async ({ body: { email, password } }) => {
-      const existingEmail = (
-        await db
-          .select({ email: users.email })
-          .from(users)
-          .where(eq(users.email, email))
-      )[0];
-      if (existingEmail) {
+    async ({ body: { email, password, displayName } }) => {
+      const { data, error } = await supabase
+        .from("users")
+        .select("existingEmail: email")
+        .eq("email", email);
+      if (error) {
+        return {
+          status: 500,
+          message: "Failed to retrieve data",
+        };
+      }
+      if (data.length === 1) {
         return {
           status: 409,
           message: "Email already exists",
@@ -97,8 +126,14 @@ export const authRoute = new Elysia({ prefix: "/auth" })
       const newUser = {
         email,
         password: hashedPassword,
+        name: displayName,
       };
-      await db.insert(users).values(newUser);
+      const { error: insertError } = await supabase
+        .from("users")
+        .insert(newUser);
+      if (insertError) {
+        return { status: 500, message: insertError };
+      }
       return {
         status: 201,
         message: "User created successfully",
@@ -110,14 +145,18 @@ export const authRoute = new Elysia({ prefix: "/auth" })
   )
   .post(
     "/logout",
-    ({ cookie: { authjwt } }) => {
+    async ({ cookie: { authjwt }, body: { id } }) => {
       authjwt.remove();
+      await supabase.from("users").update({ is_online: false }).eq("id", id);
       return {
         status: 200,
         message: "Logout successfully",
       };
     },
     {
+      body: t.Object({
+        id: t.String(),
+      }),
       checkInvalidToken: true,
     }
   )
@@ -166,11 +205,18 @@ export const authRoute = new Elysia({ prefix: "/auth" })
         algorithm: "bcrypt",
       });
       console.log("email:", emailRecords[hashedEmail]);
+      console.log(password);
       try {
-        await db
-          .update(users)
-          .set({ password: hashedPassword })
-          .where(eq(users.email, emailRecords[hashedEmail]));
+        const { error } = await supabase
+          .from("users")
+          .update({ password: hashedPassword })
+          .eq("email", emailRecords[hashedEmail]);
+        if (error) {
+          return {
+            status: 500,
+            message: "Error happens while changing password",
+          };
+        }
         return {
           status: 201,
           message: "Change password successfully",

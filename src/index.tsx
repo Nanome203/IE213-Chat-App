@@ -6,6 +6,7 @@ import testPlugin from "./utils/testPlugin";
 import { authRoute } from "./backend/auth";
 import cors from "@elysiajs/cors";
 import { ServerWebSocket, Server } from "bun";
+import { userRoute } from "./backend/userRoute";
 
 const idCounter = (() => {
   let id = 0;
@@ -26,6 +27,7 @@ const app = new Elysia()
   .use(swagger())
   .use(testPlugin())
   .use(authRoute)
+  .use(userRoute)
   .get("/", ({ redirect }) => {
     return redirect("/app");
   })

@@ -1,5 +1,37 @@
+/* @config "../tailwind.config.js"; */
+
 @import "tailwindcss";
 @plugin "daisyui";
+
+@theme {
+  --animate-grow-fade-out-scale: fade-out-scale 1s ease-out;
+
+  @keyframes fade-out-scale {
+    0% {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    100% {
+      opacity: 0;
+      transform: scale(5);
+    }
+  }
+
+  --animate-slide-in: slide-in 0.3s ease-out;
+
+  @keyframes slide-in {
+    0% {
+      opacity: 0;
+      transform: translateX(100%);
+    }
+
+    100% {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+}
 
 /* @layer base {
   :root {
