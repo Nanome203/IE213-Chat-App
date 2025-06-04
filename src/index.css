@@ -94,3 +94,108 @@ body::before {
     animation: none !important;
   }
 }
+
+
+.menu-tooltip {
+  --toggle-color: #f0f0f0;
+  --item-1-gradient: color-mix(in oklab, #000 60%, transparent);
+  --item-2-gradient: color-mix(in oklab, #000 60%, transparent);
+  --item-3-gradient: color-mix(in oklab, #000 60%, transparent);
+  width: 200px;
+  height: 200px;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 16px;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+
+  .toggle {
+    width: 50px;
+    height: 50px;
+    background-color: var(--toggle-color);
+    text-align: center;
+    line-height: 50px;
+    border-radius: 50%;
+    font-size: 1.8em;
+    z-index: 999;
+    position: absolute;
+    transition: transform 1.2s ease-in-out;
+    cursor: pointer;
+
+    &:before {
+      content: "";
+      position: absolute;
+      inset: 0px;
+      background-color: var(--toggle-color);
+      z-index: -1;
+      filter: blur(20px) saturate(900%) opacity(0.5);
+    }
+  }
+
+  #toggle {
+    appearance: none;
+    visibility: hidden;
+
+    &:checked+.toggle {
+      transform: rotate(315deg);
+    }
+
+    &:checked~.circle-box {
+      transform: rotate(calc(360deg / 8 * var(--i)));
+    }
+  }
+
+  .circle-box {
+    position: absolute;
+    left: 0;
+    list-style-type: none;
+    transition: 0.5s;
+    transform-origin: 100px;
+    transition-delay: calc(0.1s * var(--i));
+    transform: rotate(0deg) translateX(75px);
+
+    &:nth-of-type(1) .anchor {
+      background: var(--item-1-gradient);
+    }
+
+    &:nth-of-type(2) .anchor {
+      background: var(--item-2-gradient);
+    }
+
+    &:nth-of-type(3) .anchor {
+      background: var(--item-3-gradient);
+    }
+
+    .anchor {
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 50px;
+      border-radius: 50%;
+      font-size: 1.5em;
+      text-decoration: none;
+      transform: rotate(calc(360deg / -8 * var(--i)));
+
+      &:hover {
+        &::before {
+          inset: -7px;
+        }
+      }
+
+      &:before {
+        content: "";
+        position: absolute;
+        inset: 0px;
+        background-image: inherit;
+        border-radius: inherit;
+        z-index: -1;
+        filter: blur(30px) saturate(900%);
+        transition: inset 0.2s ease;
+      }
+    }
+  }
+}

@@ -9,6 +9,7 @@ import {
   LogOutIcon,
   BellIcon,
   Ellipsis,
+  PlusIcon,
 } from "lucide-react";
 import NoChatSelected from "@/components/NoChatSelected";
 import bgLogin from "../assets/img/bg_login.png";
@@ -21,7 +22,7 @@ import { authContext } from "@/context";
 import { useLocation } from "react-router";
 
 interface User {
-  id: number;
+  id: string;
   name: string;
   avatar: string;
   isOnline: boolean;
@@ -112,7 +113,7 @@ function Chatbox() {
         }}
       >
         <div className="grid grid-cols-12 h-full w-full p-10">
-          <aside className="col-span-3 min-h-0 max-w-full min-w-0 flex flex-col basis-0 relative overflow-hidden bg-[#584d82] text-white p-4 rounded-tl-xl rounded-bl-xl ">
+          <aside className="col-span-3 min-h-0 max-w-full min-w-0 flex flex-col basis-0 relative overflow-hidden bg-[#584d82] text-white p-4 rounded-tl-xl rounded-bl-xl">
             <div className="p-4 border-b border-[#6a5dad]">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
@@ -128,7 +129,7 @@ function Chatbox() {
 
                 <div className="flex items-center">
                   <MenuDropdown
-                    triggerIcon={<BellIcon className="w-5 h-5 text-white" />}
+                    triggerIcon={<BellIcon className="w-6 h-6 text-white" />}
                     menuBgColor="bg-white/80"
                     menuTextColor="text-gray-600"
                     customContent={() => (
@@ -162,7 +163,7 @@ function Chatbox() {
                     )}
                   />
 
-                  <MenuDropdown
+                  {/* <MenuDropdown
                     position="bottom-right"
                     iconColor="fill-white"
                     menuBgColor="bg-white/80"
@@ -185,7 +186,7 @@ function Chatbox() {
                         onClick: handleLogout,
                       },
                     ]}
-                  />
+                  /> */}
                 </div>
               </div>
 
@@ -277,9 +278,8 @@ function Chatbox() {
                     className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-[#6a5dad] transition"
                   >
                     <div
-                      className={`avatar ${
-                        user.isOnline ? "avatar-online" : "avatar-offline"
-                      }`}
+                      className={`avatar ${user.isOnline ? "avatar-online" : "avatar-offline"
+                        }`}
                     >
                       <div className="w-10 rounded-full">
                         <img src={user.avatar} alt={user.name} />
@@ -295,6 +295,24 @@ function Chatbox() {
                   </li>
                 ))}
               </ul>
+            </div>
+
+            <div className="absolute bottom-[-50px] right-[-50px]">
+              <div className="menu-tooltip">
+                <input type="checkbox" id="toggle" />
+                <label htmlFor="toggle" className="toggle flex items-center justify-center">
+                  <PlusIcon className="w-8 h-8 text-black" />
+                </label>
+                <li style={{ '--i': '0' } as React.CSSProperties} className="circle-box" onClick={handleLogout}>
+                  <a className="anchor"><LogOutIcon className="w-6 h-6" /></a>
+                </li>
+                <li style={{ '--i': '1' } as React.CSSProperties} className="circle-box">
+                  <a href="#" className="anchor"><UserPlus className="w-6 h-6" /></a>
+                </li>
+                <li style={{ '--i': '2' } as React.CSSProperties} className="circle-box">
+                  <a href="/app/profile" className="anchor"><User className="w-6 h-6" /></a>
+                </li>
+              </div>
             </div>
           </aside>
           <main className="col-span-9 min-h-0 max-w-full min-w-0 flex flex-col basis-0 relative overflow-hidden bg-transparent rounded-tr-xl rounded-br-xl">
@@ -315,11 +333,10 @@ function Chatbox() {
                             {selectedUser.name}
                           </p>
                           <p
-                            className={`text-sm ${
-                              selectedUser.isOnline
-                                ? "text-green-500"
-                                : "text-gray-500"
-                            }`}
+                            className={`text-sm ${selectedUser.isOnline
+                              ? "text-green-500"
+                              : "text-gray-500"
+                              }`}
                           >
                             ● {selectedUser.isOnline ? "Active now" : "Offline"}
                           </p>
