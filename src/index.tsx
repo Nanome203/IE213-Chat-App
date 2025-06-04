@@ -7,6 +7,8 @@ import { authRoute } from "./backend/auth";
 import cors from "@elysiajs/cors";
 import { ServerWebSocket, Server } from "bun";
 import { userRoute } from "./backend/userRoute";
+import { sessionManager } from "./utils/session-manager";
+import supabase from "./utils/database";
 
 const idCounter = (() => {
   let id = 0;
@@ -30,20 +32,6 @@ const app = new Elysia()
   .use(userRoute)
   .get("/", ({ redirect }) => {
     return redirect("/app");
-  })
-  .get("/api/hello", () => ({
-    message: "Hello, world!",
-    method: "GET",
-  }))
-  .put("/api/hello", () => ({
-    message: "Hello, world!",
-    method: "PUT",
-  }))
-  .get("/api/hello/:name", (req) => {
-    const name = req.params.name;
-    return {
-      message: `Hello, ${name}!`,
-    };
   });
 // .ws("/ws", {
 //   open(ws) {
@@ -111,66 +99,79 @@ Bun.serve({
   },
 
   websocket: {
+    idleTimeout: 30,
     open(ws) {
-      ws.send(JSON.stringify({ type: "history", data: messages }));
+      console.log("WebSocket initialized");
     },
 
     message(ws, data) {
-      let parsed: any;
-
-      try {
-        parsed = typeof data === "string" ? JSON.parse(data) : data;
-      } catch (err) {
-        console.error("Invalid JSON received:", data);
-        return;
-      }
-
-      if (parsed.type === "subscribe") {
-        const channel = parsed.channel;
-
-        if (!channels.has(channel)) {
-          channels.set(channel, new Set());
+      if (typeof data === "string") {
+        if (data === "ping") {
+          ws.send("pong");
+          return;
         }
+        const parsedData: { type: string; message: string } = JSON.parse(data);
 
-        channels.get(channel)?.add(ws);
-        console.log(`Client subscribed to ${channel}`);
-      }
-
-      if (parsed.type === "message") {
-        const newMessage = {
-          ...parsed,
-          id: idCounter(),
-        };
-
-        messages.push(newMessage);
-
-        // Echo to sender
-        // ws.send(JSON.stringify({ type: "message", data: newMessage }));
-
-        // Publish to all clients subscribed to "chat"
-        const subscribers = channels.get("chat");
-        if (subscribers) {
-          const messagePayload = JSON.stringify({
-            type: "message",
-            data: newMessage,
-          });
-
-          for (const client of subscribers) {
-            if (client.readyState === WebSocket.OPEN) {
-              client.send(messagePayload);
-            }
-          }
-
-          console.log("Published message to chat channel");
+        switch (parsedData.type) {
+          case "reportID": // parsedData.message is the logged in user id
+            sessionManager.set(JSON.stringify(ws), parsedData.message);
+            supabase
+              .from("users")
+              .update({ is_online: true })
+              .eq("id", parsedData.message)
+              .then(({ error }) => {
+                if (error) {
+                  console.log("Failed to change user status to online");
+                  console.log(error);
+                }
+              });
+            break;
+          // more cases later
+          default:
+            break;
         }
+      } else {
+        // handle other types of data
       }
     },
 
     close(ws) {
-      // Remove client from all channels
-      for (const subs of channels.values()) {
-        subs.delete(ws);
+      const key = JSON.stringify(ws);
+      const id = sessionManager.get(key);
+      console.log("id: ", id);
+      if (id) {
+        supabase
+          .from("users")
+          .update({ is_online: false })
+          .eq("id", id)
+          .then(({ error }) => {
+            if (error) {
+              console.log("Failed to change user status to offline");
+              console.log(error);
+            }
+          });
+
+        console.log("Socket closed");
+        // get user's friends to notify them that the user's status should update to offline on their screen
+        // const friendsId: string[] = [];
+        // const promise = supabase
+        //   .from("friends")
+        //   .select("invitor, invited")
+        //   .or(`invitor.eq.${id}, invited.eq.${id}`);
+        // promise.then(({ data }) => {
+        //   data?.forEach((obj) => {
+        //     obj.invited === id
+        //       ? friendsId.push(obj.invitor)
+        //       : friendsId.push(obj.invited);
+        //   });
+        // });
+
+        // friendsId.forEach(id => {
+
+        // })
       }
+
+      sessionManager.delete(key);
     },
   },
 });

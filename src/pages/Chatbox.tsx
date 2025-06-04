@@ -31,10 +31,31 @@ function Chatbox() {
   const [selectedUser, setSelectedUser] = useState<User | null>(
     JSON.parse(localStorage.getItem("selectedUser")!) || null
   );
+  const [ws, setWS] = useState<WebSocket>();
   const [friends, setFriends] = useState<User[]>([]);
   const { setIsLoggedIn } = React.useContext(authContext);
   const [showToast, setShowToast] = useState(false);
-  // alert(localStorage.getItem("currentUserId"))
+
+  //initialize websocket connection
+  useEffect(() => {
+    const ws = new WebSocket(`ws://localhost:3000/ws`);
+    const pingInterval = setInterval(() => {
+      ws.send("ping");
+    }, 20000);
+    ws.onopen = () => {
+      ws.send(
+        JSON.stringify({
+          type: "reportID",
+          message: localStorage.getItem("currentUserId"),
+        })
+      );
+    };
+    setWS(ws);
+    return () => {
+      clearInterval(pingInterval);
+      ws.close();
+    };
+  }, []);
   useEffect(() => {
     async function fetchFriends() {
       const response = await axios.get(

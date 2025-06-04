@@ -68,16 +68,16 @@ export const authRoute = new Elysia({ prefix: "/auth" })
               ? 60 * 60 * 24
               : 60 * 60 * 24 * 365,
         });
-        const { data, error } = await supabase
-          .from("users")
-          .update({ is_online: true })
-          .eq("email", email);
-        if (error) {
-          return {
-            status: 500,
-            message: "Cannot change user online status",
-          };
-        }
+        // const { data, error } = await supabase
+        //   .from("users")
+        //   .update({ is_online: true })
+        //   .eq("email", email);
+        // if (error) {
+        //   return {
+        //     status: 500,
+        //     message: "Cannot change user online status",
+        //   };
+        // }
         const cleanedUserData = {
           name: userData[0].name,
           id: userData[0].id,
