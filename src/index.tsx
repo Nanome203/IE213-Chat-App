@@ -9,6 +9,7 @@ import { ServerWebSocket, Server } from "bun";
 import { userRoute } from "./backend/userRoute";
 import { sessionManager } from "./utils/session-manager";
 import supabase from "./utils/database";
+import { SocketMsg } from "./utils/types";
 
 const idCounter = (() => {
   let id = 0;
@@ -33,50 +34,13 @@ const app = new Elysia()
   .get("/", ({ redirect }) => {
     return redirect("/app");
   });
-// .ws("/ws", {
-//   open(ws) {
-//     ws.send(JSON.stringify({ type: "history", data: messages }));
-//   },
-//   message(ws, data: any) {
-//     // console.log("recv")
-//     // console.log(data.type+"b4 parse");
-//     // const parsed = JSON.parse(data) as Message;
-//     // console.log("aft parse");
-//     // console.log(parsed.type);
-
-//     if (data.type === "subscribe") {
-//       ws.subscribe(data.channel);
-//       // console.log(`Client subscribed to ${data.channel}`);
-//     }
-
-//     if (data.type === "message") {
-//       const newMessage = {
-//         ...data,
-//         id: idCounter(),
-//       };
-//       messages.push(newMessage);
-
-//       ws.send(JSON.stringify({ type: "message", data: newMessage }));
-
-//       ws.publish(
-//         "chat",
-//         JSON.stringify({ type: "message", data: newMessage })
-//       );
-
-//       // console.log("publish chat!");
-//     }
-//   },
-// });
-// .listen(5050);
 
 Bun.serve({
-  // port: 3000,
   routes: {
     "/app": index,
     "/app/*": index,
     "/hello": hello,
   },
-  // fetch: app.fetch,
   development: process.env.NODE_ENV !== "production" && {
     // Enable browser hot reloading in development
     hmr: true,
@@ -110,22 +74,48 @@ Bun.serve({
           ws.send("pong");
           return;
         }
-        const parsedData: { type: string; message: string } = JSON.parse(data);
+        const parsedData: SocketMsg = JSON.parse(data);
 
         switch (parsedData.type) {
-          case "reportID": // parsedData.message is the logged in user id
-            sessionManager.set(JSON.stringify(ws), parsedData.message);
+          case "reportID": {
+            // parsedData.message is the logged in user id
+            const id = parsedData.id!;
+            sessionManager.set(id, ws);
+            // change user's status
+            //TODO: figure out if this is necessary
             supabase
               .from("users")
               .update({ is_online: true })
-              .eq("id", parsedData.message)
+              .eq("id", id)
               .then(({ error }) => {
                 if (error) {
                   console.log("Failed to change user status to online");
                   console.log(error);
                 }
+
+                // get user's friends to notify them that the user's status should update to online on their screen
+                const friendsId: string[] = [];
+                const promise = supabase
+                  .from("friends")
+                  .select("invitor, invited")
+                  .or(`invitor.eq.${id}, invited.eq.${id}`);
+
+                promise.then(({ data }) => {
+                  data?.forEach((obj) => {
+                    obj.invited === id
+                      ? friendsId.push(obj.invitor)
+                      : friendsId.push(obj.invited);
+                  });
+                  friendsId.forEach((friendId) => {
+                    sessionManager
+                      .get(friendId)
+                      ?.send(JSON.stringify({ type: "isOnline", id }));
+                  });
+                });
               });
+
             break;
+          }
           // more cases later
           default:
             break;
@@ -136,10 +126,11 @@ Bun.serve({
     },
 
     close(ws) {
-      const key = JSON.stringify(ws);
-      const id = sessionManager.get(key);
-      console.log("id: ", id);
-      if (id) {
+      const keyValuePair = sessionManager.entries().find(([k, v]) => v === ws);
+      if (keyValuePair) {
+        const id = keyValuePair[0];
+        console.log("Closing socket of user id: ", id);
+
         supabase
           .from("users")
           .update({ is_online: false })
@@ -149,31 +140,32 @@ Bun.serve({
               console.log("Failed to change user status to offline");
               console.log(error);
             }
+
+            // get user's friends to notify them that the user's status should update to offline on their screen
+            const friendsId: string[] = [];
+            const promise = supabase
+              .from("friends")
+              .select("invitor, invited")
+              .or(`invitor.eq.${id}, invited.eq.${id}`);
+            promise.then(({ data }) => {
+              data?.forEach((obj) => {
+                obj.invited === id
+                  ? friendsId.push(obj.invitor)
+                  : friendsId.push(obj.invited);
+              });
+
+              friendsId.forEach((friendId) => {
+                sessionManager
+                  .get(friendId)
+                  ?.send(JSON.stringify({ type: "isOffline", id }));
+                sessionManager.delete(id);
+                console.log("Socket closed");
+              });
+            });
           });
-
-        console.log("Socket closed");
-        // get user's friends to notify them that the user's status should update to offline on their screen
-        // const friendsId: string[] = [];
-        // const promise = supabase
-        //   .from("friends")
-        //   .select("invitor, invited")
-        //   .or(`invitor.eq.${id}, invited.eq.${id}`);
-        // promise.then(({ data }) => {
-        //   data?.forEach((obj) => {
-        //     obj.invited === id
-        //       ? friendsId.push(obj.invitor)
-        //       : friendsId.push(obj.invited);
-        //   });
-        // });
-
-        // friendsId.forEach(id => {
-
-        // })
       }
-
-      sessionManager.delete(key);
     },
   },
 });
 
-console.log("Server running");
+console.log("Server running at http://localhost:3000/");
