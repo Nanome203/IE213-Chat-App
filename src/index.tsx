@@ -1,32 +1,15 @@
 import { Elysia } from "elysia";
 import index from "./index.html";
-import hello from "./hello/index.html";
 import swagger from "@elysiajs/swagger";
 import testPlugin from "./utils/testPlugin";
 import { authRoute } from "./backend/auth";
-import cors from "@elysiajs/cors";
-import { ServerWebSocket, Server } from "bun";
+import { Server } from "bun";
 import { userRoute } from "./backend/userRoute";
 import { sessionManager } from "./utils/session-manager";
 import supabase from "./utils/database";
 import { SocketMsg } from "./utils/types";
 
-const idCounter = (() => {
-  let id = 0;
-  return () => ++id;
-})();
-export type Message = {
-  type: string;
-  id: number;
-  user: string;
-  text: string;
-  img?: string;
-};
-let messages: Message[] = [];
-const channels = new Map<string, Set<ServerWebSocket<unknown>>>();
-
 const app = new Elysia()
-  .use(cors())
   .use(swagger())
   .use(testPlugin())
   .use(authRoute)
@@ -39,7 +22,6 @@ Bun.serve({
   routes: {
     "/app": index,
     "/app/*": index,
-    "/hello": hello,
   },
   development: process.env.NODE_ENV !== "production" && {
     // Enable browser hot reloading in development
@@ -159,8 +141,8 @@ Bun.serve({
                   .get(friendId)
                   ?.send(JSON.stringify({ type: "isOffline", id }));
                 sessionManager.delete(id);
-                console.log("Socket closed");
               });
+              console.log("Socket closed");
             });
           });
       }
