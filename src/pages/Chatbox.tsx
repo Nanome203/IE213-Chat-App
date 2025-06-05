@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import {
   Phone,
   Video,
@@ -31,16 +31,26 @@ interface User {
   isOnline: boolean;
 }
 
+interface Message {
+  id: string;
+  createdAt: string;
+  image: string;
+  text: string;
+}
+
 function Chatbox() {
   const [selectedUser, setSelectedUser] = useState<User | null>(
     JSON.parse(localStorage.getItem("selectedUser")!) || null
   );
   const [myself, setMyself] = useState<User | null>(null);
   const [friends, setFriends] = useState<User[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]); // messages call API
   const { setIsLoggedIn } = React.useContext(authContext);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddFriendFormVisible, setIsAddFriendFormVisible] = useState(false);
   const [showToast, setShowToast] = useState(false);
+
+  const messageEndRef = useRef<HTMLDivElement | null>(null);
 
   const toggleForm = () => {
     setIsAddFriendFormVisible(!isAddFriendFormVisible);
@@ -49,6 +59,7 @@ function Chatbox() {
 
   // alert(localStorage.getItem("currentUserId"))
   useEffect(() => {
+    // gọi danh sách bạn bè qua API
     async function fetchFriends() {
       try {
         const response = await axios.get(
@@ -61,10 +72,7 @@ function Chatbox() {
         setIsLoading(false); // ✅ đảm bảo set dù có lỗi
       }
     }
-    fetchFriends();
-  }, []);
-
-  useEffect(() => {
+    // gọi in4 bản thân từ localStorage
     async function fetchMyself() {
       const response = await axios.get(
         `http://localhost:3000/users/${localStorage.getItem("currentUserId")}`
@@ -74,7 +82,14 @@ function Chatbox() {
       }
     }
     fetchMyself();
+    fetchFriends();
   }, []);
+
+  useEffect(() => {
+    if (messageEndRef.current && messages.length > 0) {
+      messageEndRef.current.scrollIntoView({ behavior: "smooth" })
+    }
+  }, [messages]);
 
   const handleLogout = async () => {
     try {
@@ -442,7 +457,33 @@ function Chatbox() {
                   }}
                 >
                   {/* chat container */}
-                  <div className="overflow-x-hidden overflow-y-auto flex flex-col basis-0 flex-grow-1"></div>
+                  <div className="overflow-x-hidden overflow-y-auto flex flex-col basis-0 flex-grow-1">
+                    {messages.map((message) => (
+                      <div
+                        key={message.id}
+                        className={`chat ${message.id === myself?.id ? "chat-end" : "chat-start"}`}
+                        ref={messageEndRef}
+                      >
+                        <div className="chat-image avatar">
+                          <div className="w-10 rounded-full">
+                            <img
+                              alt="avatar"
+                              src={message.id === myself?.id ? myself.avatar || avaDefault : selectedUser.avatar || avaDefault}
+                            />
+                          </div>
+                        </div>
+                        <div className="chat-header mb-1">
+                          {message.id === myself?.id ? myself.name : selectedUser.name}
+                          <time className="text-xs opacity-50">{message.createdAt}</time>
+                        </div>
+                        <div className="chat-bubble flex flex-col">
+                          {message.image && (<img src={message.image} className="sm:max-w-[200px] rounded-md mb-2" />)}
+                          {message.text && <p>{message.text}</p>}
+                        </div>
+                        <div className="chat-footer opacity-50">Delivered</div>
+                      </div>
+                    ))}
+                  </div>
 
                   {/* chat input */}
                   <MessageInput onSend={() => console.log("Send clicked")} />
