@@ -135,7 +135,8 @@ export const userRoute = new Elysia({ prefix: "/users" })
           invitedsInfo:users!friends_invited_fkey(id,name, email, isOnline:is_online, avatar:image_url)
           `
         )
-        .or(`invitor.eq.${id}, invited.eq.${id}`);
+        .or(`invitor.eq.${id}, invited.eq.${id}`)
+        .eq("accepted", true);
       if (error) {
         return {
           status: 500,
@@ -156,5 +157,91 @@ export const userRoute = new Elysia({ prefix: "/users" })
     },
     {
       checkInvalidToken: true,
+    }
+  )
+
+  .get(
+    "/:id/invitors",
+    async ({ params: { id } }) => {
+      const { data, error } = await supabase
+        .from("friends")
+        .select(
+          `
+          invitorsInfo:users!friends_invitor_fkey(id,name, email, isOnline:is_online, avatar:image_url),
+          invitedsInfo:users!friends_invited_fkey(id,name, email, isOnline:is_online, avatar:image_url)
+          `
+        )
+        .eq("invited", id)
+        .eq("accepted", false);
+      if (error) {
+        return {
+          status: 500,
+          message: error,
+        };
+      }
+      if (data.length === 0) {
+        return {
+          data,
+        };
+      }
+      const cleanedData: any[] = [];
+      data.forEach((obj) => {
+        (obj.invitorsInfo as unknown as Record<string, string | boolean>).id ===
+        id
+          ? cleanedData.push(obj.invitedsInfo)
+          : cleanedData.push(obj.invitorsInfo);
+      });
+      return {
+        status: 200,
+        data: cleanedData,
+      };
+    },
+    {
+      checkInvalidToken: true,
+    }
+  )
+  .post(
+    "/:id/friends",
+    async ({ params: { id }, body: { invitedId } }) => {
+      // checking whether invited id exists
+      const { data, error: QUERY_ERROR } = await supabase
+        .from("users")
+        .select()
+        .eq("id", invitedId);
+      if (QUERY_ERROR) {
+        return {
+          status: 500,
+          message: "Error checking user id",
+        };
+      }
+      if (data.length === 0) {
+        return {
+          message: "User not found",
+        };
+      }
+
+      // creating friend request
+      const friendship = {
+        invitor: id,
+        invited: invitedId,
+        accepted: false,
+      };
+      const { error } = await supabase.from("friends").insert(friendship);
+      if (error) {
+        return {
+          status: 500,
+          message:
+            "Cannot send friend request. Friend request is already created or requested user is already your friend",
+        };
+      }
+      return {
+        status: 201, // invitor will notify invited if status is 201
+        message: "Friend request sent",
+      };
+    },
+    {
+      body: t.Object({
+        invitedId: t.String(),
+      }),
     }
   );

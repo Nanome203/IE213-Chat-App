@@ -80,7 +80,8 @@ Bun.serve({
                 const promise = supabase
                   .from("friends")
                   .select("invitor, invited")
-                  .or(`invitor.eq.${id}, invited.eq.${id}`);
+                  .or(`invitor.eq.${id}, invited.eq.${id}`)
+                  .eq("accepted", true);
 
                 promise.then(({ data }) => {
                   data?.forEach((obj) => {
@@ -96,6 +97,70 @@ Bun.serve({
                 });
               });
 
+            break;
+          }
+          case "friendRequest": {
+            const invited = parsedData.invited!;
+            console.log("friendRequest called");
+            sessionManager.get(invited)?.send(
+              JSON.stringify({
+                type: "friendRequestNotification",
+              })
+            );
+            break;
+          }
+
+          case "acceptFriendRequest": {
+            const invitor = parsedData.invitor!;
+            const invited = parsedData.invited!;
+            supabase
+              .from("friends")
+              .update({ accepted: true })
+              .eq("invitor", invitor)
+              .eq("invited", invited)
+              .then(({ error }) => {
+                if (error) {
+                  sessionManager
+                    .get(invited)
+                    ?.send(JSON.stringify({ type: "failedToAccept" }));
+                  return;
+                }
+
+                sessionManager
+                  .get(invitor)
+                  ?.send(JSON.stringify({ type: "reloadAllLists" }));
+
+                sessionManager
+                  .get(invited)
+                  ?.send(JSON.stringify({ type: "reloadAllLists" }));
+              });
+            break;
+          }
+
+          case "declineFriendRequest": {
+            const invitor = parsedData.invitor!;
+            const invited = parsedData.invited!;
+            supabase
+              .from("friends")
+              .delete()
+              .eq("invitor", invitor)
+              .eq("invited", invited)
+              .then(({ error }) => {
+                if (error) {
+                  sessionManager
+                    .get(invited)
+                    ?.send(JSON.stringify({ type: "failedToDecline" }));
+                  return;
+                }
+
+                sessionManager
+                  .get(invitor)
+                  ?.send(JSON.stringify({ type: "reloadAllLists" }));
+
+                sessionManager
+                  .get(invited)
+                  ?.send(JSON.stringify({ type: "reloadAllLists" }));
+              });
             break;
           }
           // more cases later
@@ -128,7 +193,8 @@ Bun.serve({
             const promise = supabase
               .from("friends")
               .select("invitor, invited")
-              .or(`invitor.eq.${id}, invited.eq.${id}`);
+              .or(`invitor.eq.${id}, invited.eq.${id}`)
+              .eq("accepted", true);
             promise.then(({ data }) => {
               data?.forEach((obj) => {
                 obj.invited === id

@@ -20,7 +20,7 @@ function Login() {
     const { id, value } = e.target;
     setLoginInfo((prev) => ({
       ...prev,
-      [id]: value,
+      [id]: value.trim(),
     }));
   };
 

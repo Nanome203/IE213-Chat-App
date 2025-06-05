@@ -18,7 +18,7 @@ function ResetPassword() {
     const { id, value } = e.target;
     setPass((prev) => ({
       ...prev,
-      [id]: value,
+      [id]: value.trim(),
     }));
   };
 

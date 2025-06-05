@@ -20,7 +20,6 @@ import MenuDropdown from "@/components/MenuDropdown";
 import MessageInput from "@/components/MessageInput";
 import axios from "axios";
 import { authContext } from "@/context";
-import { useLocation } from "react-router";
 import { SocketMsg } from "@/utils/types";
 
 interface User {
@@ -36,19 +35,57 @@ function Chatbox() {
   );
   const [ws, setWS] = useState<WebSocket>();
   const [friends, setFriends] = useState<User[]>([]);
+  const [invitors, setInvitors] = useState<User[]>([]);
   const { setIsLoggedIn } = React.useContext(authContext);
   const [showToast, setShowToast] = useState(false);
   const [isAddFriendFormVisible, setIsAddFriendFormVisible] = useState(false);
+  const [wannaBefriendedUserId, setWannaBefriendedUserId] = useState("");
+
+  let pingInterval: NodeJS.Timeout;
+  const currentUserId = localStorage.getItem("currentUserId");
 
   const toggleForm = () => {
     setIsAddFriendFormVisible(!isAddFriendFormVisible);
   };
 
-  let pingInterval: NodeJS.Timeout;
+  const sendFriendRequest = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (wannaBefriendedUserId.trim() === currentUserId?.trim()) {
+      alert("You cannot send friend request to yourself");
+      return;
+    }
+    const response = await axios.post(
+      `http://localhost:3000/users/${currentUserId}/friends`,
+      {
+        invitedId: wannaBefriendedUserId,
+      }
+    );
+    if (response.data.status === 201) {
+      ws!.send(
+        JSON.stringify({
+          type: "friendRequest",
+          invitor: currentUserId,
+          invited: wannaBefriendedUserId.trim(),
+        })
+      );
+      alert("Friend request sent");
+    } else {
+      alert("Failed to send friend request");
+    }
+  };
+
+  async function fetchInvitors() {
+    const response = await axios.get(
+      `http://localhost:3000/users/${currentUserId}/invitors`
+    );
+    if (response.data.data.length !== 0) {
+      setInvitors(response.data.data);
+    }
+  }
 
   async function fetchFriends() {
     const response = await axios.get(
-      `http://localhost:3000/users/${localStorage.getItem("currentUserId")}/friends`
+      `http://localhost:3000/users/${currentUserId}/friends`
     );
     if (response.data.data.length !== 0) {
       setFriends(response.data.data);
@@ -64,7 +101,7 @@ function Chatbox() {
       ws.send(
         JSON.stringify({
           type: "reportID",
-          id: localStorage.getItem("currentUserId"),
+          id: currentUserId,
         })
       );
     };
@@ -84,6 +121,27 @@ function Chatbox() {
             break;
           }
 
+          case "friendRequestNotification": {
+            // get invitor's info
+            fetchInvitors();
+            break;
+          }
+
+          case "failedToAccept": {
+            alert("Failed to accept friend request, please try again later");
+            break;
+          }
+
+          case "failedToDecline": {
+            alert("Failed to decline friend request, please try again later");
+            break;
+          }
+
+          case "reloadAllLists": {
+            fetchFriends();
+            fetchInvitors();
+            break;
+          }
           default:
             break;
         }
@@ -97,12 +155,13 @@ function Chatbox() {
   }, []);
   useEffect(() => {
     fetchFriends();
+    fetchInvitors();
   }, []);
 
   const handleLogout = async () => {
     try {
       const response = await axios.post("http://localhost:3000/auth/logout", {
-        id: localStorage.getItem("currentUserId"),
+        id: currentUserId,
       });
       if (response.data.status === 200) {
         (
@@ -187,26 +246,48 @@ function Chatbox() {
                     menuTextColor="text-gray-600"
                     customContent={() => (
                       <div className="flex flex-col gap-4 p-2 max-h-[400px] overflow-y-auto">
-                        {friends.map((friend) => (
+                        {invitors?.map((invitor) => (
                           <div
-                            key={friend.id}
+                            key={invitor.id}
                             className="flex flex-col items-center gap-4"
                           >
                             <div className="flex items-center gap-4">
                               <div className="avatar">
                                 <div className="w-10 rounded-full">
-                                  <img src={friend.avatar} />
+                                  <img src={invitor.avatar} />
                                 </div>
                               </div>
                               <p className="text-sm font-medium">
-                                {friend.name} sent you a friend request
+                                {invitor.name} sent you a friend request
                               </p>
                             </div>
                             <div className="flex gap-4 ml-8">
-                              <button className="btn btn-sm btn-success">
+                              <button
+                                className="btn btn-sm btn-success"
+                                onClick={() => {
+                                  ws?.send(
+                                    JSON.stringify({
+                                      type: "acceptFriendRequest",
+                                      invitor: invitor.id,
+                                      invited: currentUserId,
+                                    })
+                                  );
+                                }}
+                              >
                                 Accept
                               </button>
-                              <button className="btn btn-sm btn-outline">
+                              <button
+                                className="btn btn-sm btn-outline"
+                                onClick={() => {
+                                  ws?.send(
+                                    JSON.stringify({
+                                      type: "declineFriendRequest",
+                                      invitor: invitor.id,
+                                      invited: currentUserId,
+                                    })
+                                  );
+                                }}
+                              >
                                 Decline
                               </button>
                             </div>
@@ -362,7 +443,8 @@ function Chatbox() {
                 </label>
                 <li
                   style={{ "--i": "0" } as React.CSSProperties}
-                  className="circle-box"
+                  className="circle-box cursor-pointer tooltip tooltip-left"
+                  data-tip="Log out"
                   onClick={handleLogout}
                 >
                   <a className="anchor">
@@ -371,7 +453,8 @@ function Chatbox() {
                 </li>
                 <li
                   style={{ "--i": "1" } as React.CSSProperties}
-                  className="circle-box"
+                  className="circle-box cursor-pointer tooltip tooltip-left"
+                  data-tip="Add friend"
                   onClick={toggleForm}
                 >
                   <a href="#" className="anchor">
@@ -384,7 +467,8 @@ function Chatbox() {
                 </li>
                 <li
                   style={{ "--i": "2" } as React.CSSProperties}
-                  className="circle-box"
+                  className="circle-box cursor-pointer tooltip tooltip-left"
+                  data-tip="Profile"
                 >
                   <a href="/app/profile" className="anchor">
                     <User className="w-6 h-6" />
@@ -406,12 +490,17 @@ function Chatbox() {
               }}
             >
               <div className="w-[calc(100%-144px)] h-full px-2 pt-4">
-                <form className="flex flex-col items-center justify-center gap-2 h-full">
+                <form
+                  className="flex flex-col items-center justify-center gap-2 h-full"
+                  onSubmit={sendFriendRequest}
+                >
                   <input
                     className="input text-gray-600 border-none focus:outline-none w-full"
                     type="text"
                     id="UserID"
                     required
+                    value={wannaBefriendedUserId}
+                    onChange={(e) => setWannaBefriendedUserId(e.target.value)}
                     placeholder="ID User"
                   />
                   <div className="flex items-center justify-between gap-2 w-full">
