@@ -9,6 +9,8 @@ import {
   LogOutIcon,
   BellIcon,
   Ellipsis,
+  PlusIcon,
+  X,
 } from "lucide-react";
 import NoChatSelected from "@/components/NoChatSelected";
 import bgLogin from "../assets/img/bg_login.png";
@@ -18,10 +20,10 @@ import MenuDropdown from "@/components/MenuDropdown";
 import MessageInput from "@/components/MessageInput";
 import axios from "axios";
 import { authContext } from "@/context";
-import { useLocation } from "react-router";
+import { SocketMsg } from "@/utils/types";
 
 interface User {
-  id: number;
+  id: string;
   name: string;
   avatar: string;
   isOnline: boolean;
@@ -31,26 +33,135 @@ function Chatbox() {
   const [selectedUser, setSelectedUser] = useState<User | null>(
     JSON.parse(localStorage.getItem("selectedUser")!) || null
   );
+  const [ws, setWS] = useState<WebSocket>();
   const [friends, setFriends] = useState<User[]>([]);
+  const [invitors, setInvitors] = useState<User[]>([]);
   const { setIsLoggedIn } = React.useContext(authContext);
   const [showToast, setShowToast] = useState(false);
-  // alert(localStorage.getItem("currentUserId"))
-  useEffect(() => {
-    async function fetchFriends() {
-      const response = await axios.get(
-        `http://localhost:3000/users/${localStorage.getItem("currentUserId")}/friends`
-      );
-      if (response.data.data.length !== 0) {
-        setFriends(response.data.data);
-      }
+  const [isAddFriendFormVisible, setIsAddFriendFormVisible] = useState(false);
+  const [wannaBefriendedUserId, setWannaBefriendedUserId] = useState("");
+
+  let pingInterval: NodeJS.Timeout;
+  const currentUserId = localStorage.getItem("currentUserId");
+
+  const toggleForm = () => {
+    setIsAddFriendFormVisible(!isAddFriendFormVisible);
+  };
+
+  const sendFriendRequest = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (wannaBefriendedUserId.trim() === currentUserId?.trim()) {
+      alert("You cannot send friend request to yourself");
+      return;
     }
+    const response = await axios.post(
+      `http://localhost:3000/users/${currentUserId}/friends`,
+      {
+        invitedId: wannaBefriendedUserId,
+      }
+    );
+    if (response.data.status === 201) {
+      ws!.send(
+        JSON.stringify({
+          type: "friendRequest",
+          invitor: currentUserId,
+          invited: wannaBefriendedUserId.trim(),
+        })
+      );
+      alert("Friend request sent");
+    } else {
+      alert("Failed to send friend request");
+    }
+  };
+
+  async function fetchInvitors() {
+    const response = await axios.get(
+      `http://localhost:3000/users/${currentUserId}/invitors`
+    );
+    if (response.data.data.length !== 0) {
+      setInvitors(response.data.data);
+    }
+  }
+
+  async function fetchFriends() {
+    const response = await axios.get(
+      `http://localhost:3000/users/${currentUserId}/friends`
+    );
+    if (response.data.data.length !== 0) {
+      setFriends(response.data.data);
+    }
+  }
+  //initialize websocket connection
+  useEffect(() => {
+    const ws = new WebSocket(`ws://localhost:3000/ws`);
+    pingInterval = setInterval(() => {
+      ws.send("ping");
+    }, 20000);
+    ws.onopen = () => {
+      ws.send(
+        JSON.stringify({
+          type: "reportID",
+          id: currentUserId,
+        })
+      );
+    };
+
+    ws.onmessage = (event) => {
+      if (typeof event.data === "string") {
+        if (event.data === "pong") return;
+        const msg: SocketMsg = JSON.parse(event.data);
+        switch (msg.type) {
+          case "isOffline": {
+            fetchFriends();
+            break;
+          }
+
+          case "isOnline": {
+            fetchFriends();
+            break;
+          }
+
+          case "friendRequestNotification": {
+            // get invitor's info
+            fetchInvitors();
+            break;
+          }
+
+          case "failedToAccept": {
+            alert("Failed to accept friend request, please try again later");
+            break;
+          }
+
+          case "failedToDecline": {
+            alert("Failed to decline friend request, please try again later");
+            break;
+          }
+
+          case "reloadAllLists": {
+            fetchFriends();
+            fetchInvitors();
+            break;
+          }
+          default:
+            break;
+        }
+      }
+    };
+    setWS(ws);
+    return () => {
+      clearInterval(pingInterval);
+      ws.close();
+    };
+  }, []);
+  useEffect(() => {
     fetchFriends();
+    fetchInvitors();
   }, []);
 
   const handleLogout = async () => {
     try {
       const response = await axios.post("http://localhost:3000/auth/logout", {
-        id: localStorage.getItem("currentUserId"),
+        id: currentUserId,
       });
       if (response.data.status === 200) {
         (
@@ -60,6 +171,8 @@ function Chatbox() {
         setTimeout(() => {
           localStorage.clear();
           setIsLoggedIn(false);
+          clearInterval(pingInterval);
+          ws!.close();
         }, 1000);
       } else {
         alert("Logout failed. Please try again.");
@@ -112,7 +225,7 @@ function Chatbox() {
         }}
       >
         <div className="grid grid-cols-12 h-full w-full p-10">
-          <aside className="col-span-3 min-h-0 max-w-full min-w-0 flex flex-col basis-0 relative overflow-hidden bg-[#584d82] text-white p-4 rounded-tl-xl rounded-bl-xl ">
+          <aside className="col-span-3 min-h-0 max-w-full min-w-0 flex flex-col basis-0 relative overflow-hidden bg-[#584d82] text-white p-4 rounded-tl-xl rounded-bl-xl">
             <div className="p-4 border-b border-[#6a5dad]">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
@@ -128,31 +241,53 @@ function Chatbox() {
 
                 <div className="flex items-center">
                   <MenuDropdown
-                    triggerIcon={<BellIcon className="w-5 h-5 text-white" />}
+                    triggerIcon={<BellIcon className="w-6 h-6 text-white" />}
                     menuBgColor="bg-white/80"
                     menuTextColor="text-gray-600"
                     customContent={() => (
                       <div className="flex flex-col gap-4 p-2 max-h-[400px] overflow-y-auto">
-                        {friends.map((friend) => (
+                        {invitors?.map((invitor) => (
                           <div
-                            key={friend.id}
+                            key={invitor.id}
                             className="flex flex-col items-center gap-4"
                           >
                             <div className="flex items-center gap-4">
                               <div className="avatar">
                                 <div className="w-10 rounded-full">
-                                  <img src={friend.avatar} />
+                                  <img src={invitor.avatar} />
                                 </div>
                               </div>
                               <p className="text-sm font-medium">
-                                {friend.name} sent you a friend request
+                                {invitor.name} sent you a friend request
                               </p>
                             </div>
                             <div className="flex gap-4 ml-8">
-                              <button className="btn btn-sm btn-success">
+                              <button
+                                className="btn btn-sm btn-success"
+                                onClick={() => {
+                                  ws?.send(
+                                    JSON.stringify({
+                                      type: "acceptFriendRequest",
+                                      invitor: invitor.id,
+                                      invited: currentUserId,
+                                    })
+                                  );
+                                }}
+                              >
                                 Accept
                               </button>
-                              <button className="btn btn-sm btn-outline">
+                              <button
+                                className="btn btn-sm btn-outline"
+                                onClick={() => {
+                                  ws?.send(
+                                    JSON.stringify({
+                                      type: "declineFriendRequest",
+                                      invitor: invitor.id,
+                                      invited: currentUserId,
+                                    })
+                                  );
+                                }}
+                              >
                                 Decline
                               </button>
                             </div>
@@ -162,7 +297,7 @@ function Chatbox() {
                     )}
                   />
 
-                  <MenuDropdown
+                  {/* <MenuDropdown
                     position="bottom-right"
                     iconColor="fill-white"
                     menuBgColor="bg-white/80"
@@ -185,7 +320,7 @@ function Chatbox() {
                         onClick: handleLogout,
                       },
                     ]}
-                  />
+                  /> */}
                 </div>
               </div>
 
@@ -295,6 +430,95 @@ function Chatbox() {
                   </li>
                 ))}
               </ul>
+            </div>
+
+            <div className="absolute bottom-[-50px] right-[-50px] z-50">
+              <div className="menu-tooltip">
+                <input type="checkbox" id="toggle" />
+                <label
+                  htmlFor="toggle"
+                  className="toggle flex items-center justify-center"
+                >
+                  <PlusIcon className="w-8 h-8 text-black" />
+                </label>
+                <li
+                  style={{ "--i": "0" } as React.CSSProperties}
+                  className="circle-box cursor-pointer tooltip tooltip-left"
+                  data-tip="Log out"
+                  onClick={handleLogout}
+                >
+                  <a className="anchor">
+                    <LogOutIcon className="w-6 h-6" />
+                  </a>
+                </li>
+                <li
+                  style={{ "--i": "1" } as React.CSSProperties}
+                  className="circle-box cursor-pointer tooltip tooltip-left"
+                  data-tip="Add friend"
+                  onClick={toggleForm}
+                >
+                  <a href="#" className="anchor">
+                    {isAddFriendFormVisible ? (
+                      <X className="w-6 h-6" />
+                    ) : (
+                      <UserPlus className="w-6 h-6" />
+                    )}
+                  </a>
+                </li>
+                <li
+                  style={{ "--i": "2" } as React.CSSProperties}
+                  className="circle-box cursor-pointer tooltip tooltip-left"
+                  data-tip="Profile"
+                >
+                  <a href="/app/profile" className="anchor">
+                    <User className="w-6 h-6" />
+                  </a>
+                </li>
+              </div>
+            </div>
+
+            <div
+              className={`transition-all duration-500 overflow-hidden ${
+                isAddFriendFormVisible
+                  ? "h-[150px] opacity-100"
+                  : "h-0 opacity-0"
+              }`}
+              style={{
+                backgroundImage: `url(${bgLogin})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }}
+            >
+              <div className="w-[calc(100%-144px)] h-full px-2 pt-4">
+                <form
+                  className="flex flex-col items-center justify-center gap-2 h-full"
+                  onSubmit={sendFriendRequest}
+                >
+                  <input
+                    className="input text-gray-600 border-none focus:outline-none w-full"
+                    type="text"
+                    id="UserID"
+                    required
+                    value={wannaBefriendedUserId}
+                    onChange={(e) => setWannaBefriendedUserId(e.target.value)}
+                    placeholder="ID User"
+                  />
+                  <div className="flex items-center justify-between gap-2 w-full">
+                    <button
+                      type="reset"
+                      className="btn btn-outline btn-error rounded-lg min-w-[120px]"
+                    >
+                      cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-accent rounded-lg min-w-[120px]"
+                    >
+                      add friend
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           </aside>
           <main className="col-span-9 min-h-0 max-w-full min-w-0 flex flex-col basis-0 relative overflow-hidden bg-transparent rounded-tr-xl rounded-br-xl">
