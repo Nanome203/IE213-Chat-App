@@ -1,7 +1,10 @@
 /* @config "../tailwind.config.js"; */
 
 @import "tailwindcss";
-@plugin "daisyui";
+
+@plugin "daisyui" {
+  themes: light --default;
+}
 
 @theme {
   --animate-grow-fade-out-scale: fade-out-scale 1s ease-out;
