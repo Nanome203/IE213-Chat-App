@@ -9,6 +9,8 @@ import {
   LogOutIcon,
   BellIcon,
   Ellipsis,
+  PlusIcon,
+  X,
 } from "lucide-react";
 import NoChatSelected from "@/components/NoChatSelected";
 import bgLogin from "../assets/img/bg_login.png";
@@ -36,6 +38,11 @@ function Chatbox() {
   const [friends, setFriends] = useState<User[]>([]);
   const { setIsLoggedIn } = React.useContext(authContext);
   const [showToast, setShowToast] = useState(false);
+  const [isAddFriendFormVisible, setIsAddFriendFormVisible] = useState(false);
+
+  const toggleForm = () => {
+    setIsAddFriendFormVisible(!isAddFriendFormVisible);
+  };
 
   let pingInterval: NodeJS.Timeout;
 
@@ -159,7 +166,7 @@ function Chatbox() {
         }}
       >
         <div className="grid grid-cols-12 h-full w-full p-10">
-          <aside className="col-span-3 min-h-0 max-w-full min-w-0 flex flex-col basis-0 relative overflow-hidden bg-[#584d82] text-white p-4 rounded-tl-xl rounded-bl-xl ">
+          <aside className="col-span-3 min-h-0 max-w-full min-w-0 flex flex-col basis-0 relative overflow-hidden bg-[#584d82] text-white p-4 rounded-tl-xl rounded-bl-xl">
             <div className="p-4 border-b border-[#6a5dad]">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
@@ -175,7 +182,7 @@ function Chatbox() {
 
                 <div className="flex items-center">
                   <MenuDropdown
-                    triggerIcon={<BellIcon className="w-5 h-5 text-white" />}
+                    triggerIcon={<BellIcon className="w-6 h-6 text-white" />}
                     menuBgColor="bg-white/80"
                     menuTextColor="text-gray-600"
                     customContent={() => (
@@ -209,7 +216,7 @@ function Chatbox() {
                     )}
                   />
 
-                  <MenuDropdown
+                  {/* <MenuDropdown
                     position="bottom-right"
                     iconColor="fill-white"
                     menuBgColor="bg-white/80"
@@ -232,7 +239,7 @@ function Chatbox() {
                         onClick: handleLogout,
                       },
                     ]}
-                  />
+                  /> */}
                 </div>
               </div>
 
@@ -342,6 +349,87 @@ function Chatbox() {
                   </li>
                 ))}
               </ul>
+            </div>
+
+            <div className="absolute bottom-[-50px] right-[-50px] z-50">
+              <div className="menu-tooltip">
+                <input type="checkbox" id="toggle" />
+                <label
+                  htmlFor="toggle"
+                  className="toggle flex items-center justify-center"
+                >
+                  <PlusIcon className="w-8 h-8 text-black" />
+                </label>
+                <li
+                  style={{ "--i": "0" } as React.CSSProperties}
+                  className="circle-box"
+                  onClick={handleLogout}
+                >
+                  <a className="anchor">
+                    <LogOutIcon className="w-6 h-6" />
+                  </a>
+                </li>
+                <li
+                  style={{ "--i": "1" } as React.CSSProperties}
+                  className="circle-box"
+                  onClick={toggleForm}
+                >
+                  <a href="#" className="anchor">
+                    {isAddFriendFormVisible ? (
+                      <X className="w-6 h-6" />
+                    ) : (
+                      <UserPlus className="w-6 h-6" />
+                    )}
+                  </a>
+                </li>
+                <li
+                  style={{ "--i": "2" } as React.CSSProperties}
+                  className="circle-box"
+                >
+                  <a href="/app/profile" className="anchor">
+                    <User className="w-6 h-6" />
+                  </a>
+                </li>
+              </div>
+            </div>
+
+            <div
+              className={`transition-all duration-500 overflow-hidden ${
+                isAddFriendFormVisible
+                  ? "h-[150px] opacity-100"
+                  : "h-0 opacity-0"
+              }`}
+              style={{
+                backgroundImage: `url(${bgLogin})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }}
+            >
+              <div className="w-[calc(100%-144px)] h-full px-2 pt-4">
+                <form className="flex flex-col items-center justify-center gap-2 h-full">
+                  <input
+                    className="input text-gray-600 border-none focus:outline-none w-full"
+                    type="text"
+                    id="UserID"
+                    required
+                    placeholder="ID User"
+                  />
+                  <div className="flex items-center justify-between gap-2 w-full">
+                    <button
+                      type="reset"
+                      className="btn btn-outline btn-error rounded-lg min-w-[120px]"
+                    >
+                      cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-accent rounded-lg min-w-[120px]"
+                    >
+                      add friend
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           </aside>
           <main className="col-span-9 min-h-0 max-w-full min-w-0 flex flex-col basis-0 relative overflow-hidden bg-transparent rounded-tr-xl rounded-br-xl">

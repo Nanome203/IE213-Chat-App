@@ -26,14 +26,6 @@ function Login() {
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (loginInfo.email === "" || loginInfo.password === "") {
-      alert("Please fill in all fields.");
-      return;
-    }
-    if (loginInfo.password.length < 8) {
-      alert("Password must be at least 8 characters long.");
-      return;
-    }
     try {
       const response = await axios.post(
         "http://localhost:3000/auth/login",
@@ -118,20 +110,42 @@ function Login() {
           </div>
           <div className="max-w-md mx-auto">
             <div className="mt-5">
-              <input
-                className="bg-white border border-neutral-600 focus-visible:outline-blue-700 rounded-lg px-3 py-2 mt-1 mb-5 text-sm text-neutral-800 w-full"
+              {/* <input
+                className="validator input bg-white border border-neutral-600 focus-visible:outline-blue-700 rounded-lg px-3 py-2 mt-1 mb-5 text-sm text-neutral-800 w-full "
                 type="email"
                 id="email"
+                required
+                placeholder="mail@site.com"
+                onChange={handleInputChange}
+              />
+                <input
+                  className="validator input bg-white border border-neutral-600 focus-visible:outline-blue-700 rounded-lg px-3 py-2 mt-1 mb-5 text-sm text-neutral-800 w-full"
+                  type="password"
+                  id="password"
+                  required
+                  placeholder="Password"
+                  minLength={8}
+                  onChange={handleInputChange}
+                /> */}
+              <input
+                className="input validator w-full"
+                type="email"
+                id="email"
+                required
                 placeholder="Email"
                 onChange={handleInputChange}
               />
+              <p className="validator-hint mb-2">Enter valid email address</p>
               <input
-                className="bg-white border border-neutral-600 focus-visible:outline-blue-700 rounded-lg px-3 py-2 mt-1 mb-5 text-sm text-neutral-800 w-full"
                 type="password"
+                className="input validator w-full"
                 id="password"
+                required
                 placeholder="Password"
+                minLength={8}
                 onChange={handleInputChange}
               />
+              <p className="validator-hint"> Must be more than 8 characters</p>
             </div>
             <div className="text-right mb-4">
               <Link
@@ -237,7 +251,6 @@ function Login() {
               <button
                 className="py-2 px-4 bg-blue-600 hover:bg-blue-700 focus:ring-blue-500 focus:ring-offset-blue-200 text-white w-full transition ease-in duration-200 text-center text-base font-semibold shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 rounded-lg"
                 type="submit"
-                onClick={handleLogin}
               >
                 Log in
               </button>
