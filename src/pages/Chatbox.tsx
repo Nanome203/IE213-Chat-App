@@ -21,6 +21,7 @@ import MessageInput from "@/components/MessageInput";
 import axios from "axios";
 import { authContext } from "@/context";
 import { useLocation } from "react-router";
+import { SocketMsg } from "@/utils/types";
 
 interface User {
   id: string;
@@ -33,6 +34,7 @@ function Chatbox() {
   const [selectedUser, setSelectedUser] = useState<User | null>(
     JSON.parse(localStorage.getItem("selectedUser")!) || null
   );
+  const [ws, setWS] = useState<WebSocket>();
   const [friends, setFriends] = useState<User[]>([]);
   const { setIsLoggedIn } = React.useContext(authContext);
   const [showToast, setShowToast] = useState(false);
@@ -42,17 +44,58 @@ function Chatbox() {
     setIsAddFriendFormVisible(!isAddFriendFormVisible);
   };
 
+  let pingInterval: NodeJS.Timeout;
 
-  // alert(localStorage.getItem("currentUserId"))
-  useEffect(() => {
-    async function fetchFriends() {
-      const response = await axios.get(
-        `http://localhost:3000/users/${localStorage.getItem("currentUserId")}/friends`
-      );
-      if (response.data.data.length !== 0) {
-        setFriends(response.data.data);
-      }
+  async function fetchFriends() {
+    const response = await axios.get(
+      `http://localhost:3000/users/${localStorage.getItem("currentUserId")}/friends`
+    );
+    if (response.data.data.length !== 0) {
+      setFriends(response.data.data);
     }
+  }
+  //initialize websocket connection
+  useEffect(() => {
+    const ws = new WebSocket(`ws://localhost:3000/ws`);
+    pingInterval = setInterval(() => {
+      ws.send("ping");
+    }, 20000);
+    ws.onopen = () => {
+      ws.send(
+        JSON.stringify({
+          type: "reportID",
+          id: localStorage.getItem("currentUserId"),
+        })
+      );
+    };
+
+    ws.onmessage = (event) => {
+      if (typeof event.data === "string") {
+        if (event.data === "pong") return;
+        const msg: SocketMsg = JSON.parse(event.data);
+        switch (msg.type) {
+          case "isOffline": {
+            fetchFriends();
+            break;
+          }
+
+          case "isOnline": {
+            fetchFriends();
+            break;
+          }
+
+          default:
+            break;
+        }
+      }
+    };
+    setWS(ws);
+    return () => {
+      clearInterval(pingInterval);
+      ws.close();
+    };
+  }, []);
+  useEffect(() => {
     fetchFriends();
   }, []);
 
@@ -69,6 +112,8 @@ function Chatbox() {
         setTimeout(() => {
           localStorage.clear();
           setIsLoggedIn(false);
+          clearInterval(pingInterval);
+          ws!.close();
         }, 1000);
       } else {
         alert("Logout failed. Please try again.");
@@ -286,8 +331,9 @@ function Chatbox() {
                     className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-[#6a5dad] transition"
                   >
                     <div
-                      className={`avatar ${user.isOnline ? "avatar-online" : "avatar-offline"
-                        }`}
+                      className={`avatar ${
+                        user.isOnline ? "avatar-online" : "avatar-offline"
+                      }`}
                     >
                       <div className="w-10 rounded-full">
                         <img src={user.avatar} alt={user.name} />
@@ -308,33 +354,79 @@ function Chatbox() {
             <div className="absolute bottom-[-50px] right-[-50px] z-50">
               <div className="menu-tooltip">
                 <input type="checkbox" id="toggle" />
-                <label htmlFor="toggle" className="toggle flex items-center justify-center">
+                <label
+                  htmlFor="toggle"
+                  className="toggle flex items-center justify-center"
+                >
                   <PlusIcon className="w-8 h-8 text-black" />
                 </label>
-                <li style={{ '--i': '0' } as React.CSSProperties} className="circle-box" onClick={handleLogout}>
-                  <a className="anchor"><LogOutIcon className="w-6 h-6" /></a>
+                <li
+                  style={{ "--i": "0" } as React.CSSProperties}
+                  className="circle-box"
+                  onClick={handleLogout}
+                >
+                  <a className="anchor">
+                    <LogOutIcon className="w-6 h-6" />
+                  </a>
                 </li>
-                <li style={{ '--i': '1' } as React.CSSProperties} className="circle-box" onClick={toggleForm}>
-                  <a href="#" className="anchor">{isAddFriendFormVisible ? <X className="w-6 h-6" /> : <UserPlus className="w-6 h-6" />}</a>
+                <li
+                  style={{ "--i": "1" } as React.CSSProperties}
+                  className="circle-box"
+                  onClick={toggleForm}
+                >
+                  <a href="#" className="anchor">
+                    {isAddFriendFormVisible ? (
+                      <X className="w-6 h-6" />
+                    ) : (
+                      <UserPlus className="w-6 h-6" />
+                    )}
+                  </a>
                 </li>
-                <li style={{ '--i': '2' } as React.CSSProperties} className="circle-box">
-                  <a href="/app/profile" className="anchor"><User className="w-6 h-6" /></a>
+                <li
+                  style={{ "--i": "2" } as React.CSSProperties}
+                  className="circle-box"
+                >
+                  <a href="/app/profile" className="anchor">
+                    <User className="w-6 h-6" />
+                  </a>
                 </li>
               </div>
             </div>
 
-            <div className={`transition-all duration-500 overflow-hidden ${isAddFriendFormVisible ? 'h-[150px] opacity-100' : 'h-0 opacity-0'
-              }`} style={{
+            <div
+              className={`transition-all duration-500 overflow-hidden ${
+                isAddFriendFormVisible
+                  ? "h-[150px] opacity-100"
+                  : "h-0 opacity-0"
+              }`}
+              style={{
                 backgroundImage: `url(${bgLogin})`,
                 backgroundSize: "cover",
                 backgroundPosition: "center",
-              }}>
+              }}
+            >
               <div className="w-[calc(100%-144px)] h-full px-2 pt-4">
                 <form className="flex flex-col items-center justify-center gap-2 h-full">
-                  <input className="input text-gray-600 border-none focus:outline-none w-full" type="text" id="UserID" required placeholder="ID User" />
+                  <input
+                    className="input text-gray-600 border-none focus:outline-none w-full"
+                    type="text"
+                    id="UserID"
+                    required
+                    placeholder="ID User"
+                  />
                   <div className="flex items-center justify-between gap-2 w-full">
-                    <button type="reset" className="btn btn-outline btn-error rounded-lg min-w-[120px]" >cancel</button>
-                    <button type="submit" className="btn btn-accent rounded-lg min-w-[120px]" >add friend</button>
+                    <button
+                      type="reset"
+                      className="btn btn-outline btn-error rounded-lg min-w-[120px]"
+                    >
+                      cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-accent rounded-lg min-w-[120px]"
+                    >
+                      add friend
+                    </button>
                   </div>
                 </form>
               </div>
@@ -358,10 +450,11 @@ function Chatbox() {
                             {selectedUser.name}
                           </p>
                           <p
-                            className={`text-sm ${selectedUser.isOnline
-                              ? "text-green-500"
-                              : "text-gray-500"
-                              }`}
+                            className={`text-sm ${
+                              selectedUser.isOnline
+                                ? "text-green-500"
+                                : "text-gray-500"
+                            }`}
                           >
                             ● {selectedUser.isOnline ? "Active now" : "Offline"}
                           </p>
