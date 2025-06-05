@@ -70,21 +70,10 @@ export const userRoute = new Elysia({ prefix: "/users" })
       }
       const cleanedData: any[] = [];
       data.forEach((obj) => {
-        //ignore type error
-        if (
-          (obj.invitorsInfo as unknown as Record<string, string | boolean>)
-            .id === id
-        ) {
-          cleanedData.push(obj.invitedsInfo);
-          return;
-        }
-        //ignore type error
-        if (
-          (obj.invitedsInfo as unknown as Record<string, string | boolean>)
-            .id === id
-        ) {
-          cleanedData.push(obj.invitorsInfo);
-        }
+        (obj.invitorsInfo as unknown as Record<string, string | boolean>).id ===
+        id
+          ? cleanedData.push(obj.invitedsInfo)
+          : cleanedData.push(obj.invitorsInfo);
       });
       return {
         status: 200,

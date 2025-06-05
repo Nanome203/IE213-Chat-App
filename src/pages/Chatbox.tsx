@@ -19,9 +19,10 @@ import MessageInput from "@/components/MessageInput";
 import axios from "axios";
 import { authContext } from "@/context";
 import { useLocation } from "react-router";
+import { SocketMsg } from "@/utils/types";
 
 interface User {
-  id: number;
+  id: string;
   name: string;
   avatar: string;
   isOnline: boolean;
@@ -31,19 +32,63 @@ function Chatbox() {
   const [selectedUser, setSelectedUser] = useState<User | null>(
     JSON.parse(localStorage.getItem("selectedUser")!) || null
   );
+  const [ws, setWS] = useState<WebSocket>();
   const [friends, setFriends] = useState<User[]>([]);
   const { setIsLoggedIn } = React.useContext(authContext);
   const [showToast, setShowToast] = useState(false);
-  // alert(localStorage.getItem("currentUserId"))
-  useEffect(() => {
-    async function fetchFriends() {
-      const response = await axios.get(
-        `http://localhost:3000/users/${localStorage.getItem("currentUserId")}/friends`
-      );
-      if (response.data.data.length !== 0) {
-        setFriends(response.data.data);
-      }
+
+  let pingInterval: NodeJS.Timeout;
+
+  async function fetchFriends() {
+    const response = await axios.get(
+      `http://localhost:3000/users/${localStorage.getItem("currentUserId")}/friends`
+    );
+    if (response.data.data.length !== 0) {
+      setFriends(response.data.data);
     }
+  }
+  //initialize websocket connection
+  useEffect(() => {
+    const ws = new WebSocket(`ws://localhost:3000/ws`);
+    pingInterval = setInterval(() => {
+      ws.send("ping");
+    }, 20000);
+    ws.onopen = () => {
+      ws.send(
+        JSON.stringify({
+          type: "reportID",
+          id: localStorage.getItem("currentUserId"),
+        })
+      );
+    };
+
+    ws.onmessage = (event) => {
+      if (typeof event.data === "string") {
+        if (event.data === "pong") return;
+        const msg: SocketMsg = JSON.parse(event.data);
+        switch (msg.type) {
+          case "isOffline": {
+            fetchFriends();
+            break;
+          }
+
+          case "isOnline": {
+            fetchFriends();
+            break;
+          }
+
+          default:
+            break;
+        }
+      }
+    };
+    setWS(ws);
+    return () => {
+      clearInterval(pingInterval);
+      ws.close();
+    };
+  }, []);
+  useEffect(() => {
     fetchFriends();
   }, []);
 
@@ -60,6 +105,8 @@ function Chatbox() {
         setTimeout(() => {
           localStorage.clear();
           setIsLoggedIn(false);
+          clearInterval(pingInterval);
+          ws!.close();
         }, 1000);
       } else {
         alert("Logout failed. Please try again.");
