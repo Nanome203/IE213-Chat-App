@@ -247,86 +247,72 @@ Bun.serve({
       }
     },
   },
+
+  // websocket: {
+  //   open(ws) {
+  //     ws.send(JSON.stringify({ type: "history", data: messages }));
+  //   },
+
+  //   message(ws, data) {
+  //     let parsed: any;
+
+  //     try {
+  //       parsed = typeof data === "string" ? JSON.parse(data) : data;
+  //     } catch (err) {
+  //       console.error("Invalid JSON received:", data);
+  //       return;
+  //     }
+
+  //     if (parsed.type === "subscribe") {
+  //       const channel = parsed.channel;
+
+  //       if (!channels.has(channel)) {
+  //         channels.set(channel, new Set());
+  //       }
+
+  //       channels.get(channel)?.add(ws);
+  //       console.log(`Client subscribed to ${channel}`);
+  //     }
+
+  //     if (parsed.type === "message") {
+  //       const newMessage = {
+  //         ...parsed,
+  //         id: idCounter(),
+  //       };
+
+  //       messages.push(newMessage);
+
+  //       // Echo to sender
+  //       // ws.send(JSON.stringify({ type: "message", data: newMessage }));
+
+  //       // Publish to all clients subscribed to "chat"
+  //       const subscribers = channels.get("chat");
+  //       if (subscribers) {
+  //         const messagePayload = JSON.stringify({
+  //           type: "message",
+  //           data: newMessage,
+  //         });
+
+  //         for (const client of subscribers) {
+  //           if (client.readyState === WebSocket.OPEN) {
+  //             client.send(messagePayload);
+  //           }
+  //         }
+
+  //         console.log("Published message to chat channel");
+  //       }
+  //     }
+  //   },
+
+  //   close(ws) {
+  //     // Remove client from all channels
+  //     for (const subs of channels.values()) {
+  //       subs.delete(ws);
+  //     }
+  //   },
+  // },
 });
 
 console.log("Server running at http://localhost:3000/");
-  fetch(req: Request, server: Server) {
-    const url = new URL(req.url);
 
-    // WebSocket Upgrade
-    if (url.pathname === "/ws" && server.upgrade) {
-      if (req.headers.get("upgrade") === "websocket") {
-        const upgraded = server.upgrade(req);
-        if (upgraded) return new Response(null, { status: 101 });
-        return new Response("WebSocket upgrade failed", { status: 400 });
-      }
-    }
-    return app.fetch(req);
-  },
 
-  websocket: {
-    open(ws) {
-      ws.send(JSON.stringify({ type: "history", data: messages }));
-    },
-
-    message(ws, data) {
-      let parsed: any;
-
-      try {
-        parsed = typeof data === "string" ? JSON.parse(data) : data;
-      } catch (err) {
-        console.error("Invalid JSON received:", data);
-        return;
-      }
-
-      if (parsed.type === "subscribe") {
-        const channel = parsed.channel;
-
-        if (!channels.has(channel)) {
-          channels.set(channel, new Set());
-        }
-
-        channels.get(channel)?.add(ws);
-        console.log(`Client subscribed to ${channel}`);
-      }
-
-      if (parsed.type === "message") {
-        const newMessage = {
-          ...parsed,
-          id: idCounter(),
-        };
-
-        messages.push(newMessage);
-
-        // Echo to sender
-        // ws.send(JSON.stringify({ type: "message", data: newMessage }));
-
-        // Publish to all clients subscribed to "chat"
-        const subscribers = channels.get("chat");
-        if (subscribers) {
-          const messagePayload = JSON.stringify({
-            type: "message",
-            data: newMessage,
-          });
-
-          for (const client of subscribers) {
-            if (client.readyState === WebSocket.OPEN) {
-              client.send(messagePayload);
-            }
-          }
-
-          console.log("Published message to chat channel");
-        }
-      }
-    },
-
-    close(ws) {
-      // Remove client from all channels
-      for (const subs of channels.values()) {
-        subs.delete(ws);
-      }
-    },
-  },
-});
-
-console.log("Server running");
