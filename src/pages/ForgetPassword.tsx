@@ -11,7 +11,7 @@ function ForgetPassword() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
-    setEmail(value);
+    setEmail(value.trim());
   };
 
   const handleReset = async () => {

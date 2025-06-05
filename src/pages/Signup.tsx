@@ -19,7 +19,7 @@ function Signup() {
     const { id, value } = e.target;
     setSignupInfo((prev) => ({
       ...prev,
-      [id]: value,
+      [id]: value.trim(),
     }));
   };
 
@@ -97,14 +97,47 @@ function Signup() {
               placeholder="Retype password"
               onChange={handleInputChange}
             /> */}
-            <input type="text" id="displayName" className="input validator w-full" required placeholder="Username"
-              minLength={3} maxLength={30} onChange={handleInputChange} />
+            <input
+              type="text"
+              id="displayName"
+              className="input validator w-full"
+              required
+              placeholder="Username"
+              minLength={3}
+              maxLength={30}
+              onChange={handleInputChange}
+            />
             <p className="validator-hint mb-2"> Must be 3 to 30 characters</p>
-            <input className="input validator w-full" type="email" id="email" required placeholder="Email" onChange={handleInputChange} />
+            <input
+              className="input validator w-full"
+              type="email"
+              id="email"
+              required
+              placeholder="Email"
+              onChange={handleInputChange}
+            />
             <p className="validator-hint mb-2">Enter valid email address</p>
-            <input type="password" className="input validator w-full" id="password" required placeholder="Password" minLength={8} onChange={handleInputChange} />
-            <p className="validator-hint mb-2"> Must be more than 8 characters</p>
-            <input type="password" className="input validator w-full mb-4" id="retypePassword" required placeholder="Retype Password" onChange={handleInputChange} />
+            <input
+              type="password"
+              className="input validator w-full"
+              id="password"
+              required
+              placeholder="Password"
+              minLength={8}
+              onChange={handleInputChange}
+            />
+            <p className="validator-hint mb-2">
+              {" "}
+              Must be more than 8 characters
+            </p>
+            <input
+              type="password"
+              className="input validator w-full mb-4"
+              id="retypePassword"
+              required
+              placeholder="Retype Password"
+              onChange={handleInputChange}
+            />
           </div>
           <div className="flex justify-center w-full items-center">
             <div>
