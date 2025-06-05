@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ArrowLeftIcon, CameraIcon, Edit } from "lucide-react";
 import bgLogin from "../assets/img/bg_login.png";
+import avaDefault from "../assets/img/avaDefault.png";
 import axios from "axios";
 import { password } from "bun";
 
@@ -121,7 +122,7 @@ function Profile() {
     return (
         <>
             {/* Change Username Modal */}
-            <dialog className="modal" id="ChangeUsernameModal">
+            {/* <dialog className="modal" id="ChangeUsernameModal">
                 <form method="dialog" className="modal-box flex flex-col items-center justify-center gap-6 bg-center bg-no-repeat bg-cover" style={{
                     backgroundImage: `url(${bgLogin})`,
                 }}>
@@ -148,9 +149,9 @@ function Profile() {
                     </fieldset>
                     <button className="btn btn-info">Accept</button>
                 </form>
-            </dialog>
+            </dialog> */}
             {/* Change PhoneNumber Modal */}
-            <dialog className="modal" id="ChangePhoneNumberModal">
+            {/* <dialog className="modal" id="ChangePhoneNumberModal">
                 <form method="dialog" className="modal-box flex flex-col items-center justify-center gap-6 bg-center bg-no-repeat bg-cover" style={{
                     backgroundImage: `url(${bgLogin})`,
                 }}>
@@ -161,7 +162,7 @@ function Profile() {
                     </fieldset>
                     <button className="btn btn-info">Accept</button>
                 </form>
-            </dialog>
+            </dialog> */}
             <div
                 className="h-screen w-screen bg-center bg-no-repeat bg-cover flex items-center justify-center"
                 style={{
@@ -183,7 +184,7 @@ function Profile() {
                         <div className="flex flex-col items-center justify-center gap-2 border-2 border-gray-300 py-6 px-10 rounded-xl">
                             <div className="avatar">
                                 <div className="w-36 rounded-full">
-                                    <img src="https://img.daisyui.com/images/profile/demo/yellingcat@192.webp" />
+                                    <img src={myself?.avatar || avaDefault} />
                                 </div>
                                 <div className="absolute bottom-0 right-0">
                                     <input

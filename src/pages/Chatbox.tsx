@@ -11,16 +11,18 @@ import {
   Ellipsis,
   PlusIcon,
   X,
+  SearchIcon,
+  XIcon,
 } from "lucide-react";
 import NoChatSelected from "@/components/NoChatSelected";
 import bgLogin from "../assets/img/bg_login.png";
 import rickroll from "../assets/img/rick-roll.gif";
 import logOutGif from "../assets/img/log-out.gif";
+import avaDefault from "../assets/img/avaDefault.png";
 import MenuDropdown from "@/components/MenuDropdown";
 import MessageInput from "@/components/MessageInput";
 import axios from "axios";
 import { authContext } from "@/context";
-import { useLocation } from "react-router";
 
 interface User {
   id: string;
@@ -33,10 +35,12 @@ function Chatbox() {
   const [selectedUser, setSelectedUser] = useState<User | null>(
     JSON.parse(localStorage.getItem("selectedUser")!) || null
   );
+  const [myself, setMyself] = useState<User | null>(null);
   const [friends, setFriends] = useState<User[]>([]);
   const { setIsLoggedIn } = React.useContext(authContext);
-  const [showToast, setShowToast] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isAddFriendFormVisible, setIsAddFriendFormVisible] = useState(false);
+  const [showToast, setShowToast] = useState(false);
 
   const toggleForm = () => {
     setIsAddFriendFormVisible(!isAddFriendFormVisible);
@@ -46,14 +50,30 @@ function Chatbox() {
   // alert(localStorage.getItem("currentUserId"))
   useEffect(() => {
     async function fetchFriends() {
-      const response = await axios.get(
-        `http://localhost:3000/users/${localStorage.getItem("currentUserId")}/friends`
-      );
-      if (response.data.data.length !== 0) {
-        setFriends(response.data.data);
+      try {
+        const response = await axios.get(
+          `http://localhost:3000/users/${localStorage.getItem("currentUserId")}/friends`
+        );
+        if (response.data.data.length !== 0) {
+          setFriends(response.data.data);
+        }
+      } finally {
+        setIsLoading(false); // ✅ đảm bảo set dù có lỗi
       }
     }
     fetchFriends();
+  }, []);
+
+  useEffect(() => {
+    async function fetchMyself() {
+      const response = await axios.get(
+        `http://localhost:3000/users/${localStorage.getItem("currentUserId")}`
+      );
+      if (response.data.data.length !== 0) {
+        setMyself(response.data.data[0]);
+      }
+    }
+    fetchMyself();
   }, []);
 
   const handleLogout = async () => {
@@ -122,17 +142,28 @@ function Chatbox() {
       >
         <div className="grid grid-cols-12 h-full w-full p-10">
           <aside className="col-span-3 min-h-0 max-w-full min-w-0 flex flex-col basis-0 relative overflow-hidden bg-[#584d82] text-white p-4 rounded-tl-xl rounded-bl-xl">
+            {/* Header của aside */}
             <div className="p-4 border-b border-[#6a5dad]">
+              {/* avatar người dùng */}
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <div className="avatar">
-                    <div className="w-10 rounded-full">
-                      <img src="https://img.daisyui.com/images/profile/demo/yellingwoman@192.webp" />
-                    </div>
-                  </div>
-                  <span className="font-semibold">
-                    {localStorage.getItem("name")}
-                  </span>
+                  {isLoading ? (
+                    <>
+                      <div className="skeleton h-12 w-12 shrink-0 rounded-full"></div>
+                      <div className="skeleton h-4 w-24"></div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="avatar">
+                        <div className="w-12 rounded-full">
+                          <img src={myself?.avatar || avaDefault} />
+                        </div>
+                      </div>
+                      <span className="font-semibold">
+                        {localStorage.getItem("name")}
+                      </span>
+                    </>
+                  )}
                 </div>
 
                 <div className="flex items-center">
@@ -158,11 +189,11 @@ function Chatbox() {
                               </p>
                             </div>
                             <div className="flex gap-4 ml-8">
+                              <button className="btn btn-sm btn-outline btn-error">
+                                Decline
+                              </button>
                               <button className="btn btn-sm btn-success">
                                 Accept
-                              </button>
-                              <button className="btn btn-sm btn-outline">
-                                Decline
                               </button>
                             </div>
                           </div>
@@ -198,55 +229,34 @@ function Chatbox() {
                 </div>
               </div>
 
-              <div className="mb-3 relative flex items-center justify-center">
-                <form className="flex items-center justify-center bg-[#6c5f9b] text-white rounded-md shadow text-base w-10/12 focus-within:w-full transition-all">
-                  <div
-                    aria-disabled="true"
-                    className="w-10 grid place-content-center"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <circle cx="11" cy="11" r="8"></circle>
-                      <path d="m21 21-4.3-4.3"></path>
-                    </svg>
+              {/* thanh tìm kiếm bạn bè hiện tại */}
+              <div className="mb-3 px-2">
+                <form
+                  className="
+      flex items-center bg-[#6c5f9b] text-white rounded-md shadow text-base
+      w-10/12 focus-within:w-full transition-all duration-300
+      mx-auto max-w-full
+    "
+                >
+                  <div className="w-10 flex-shrink-0 grid place-content-center">
+                    <SearchIcon className="h-5 w-5" />
                   </div>
                   <input
                     type="text"
                     name="text"
-                    className="bg-transparent py-2.5 outline-none placeholder:text-zinc-400 flex-1"
+                    className="bg-transparent py-2.5 px-2 outline-none placeholder:text-zinc-300 text-sm flex-1 min-w-0"
                     placeholder="Search..."
                   />
                   <button
-                    className="w-10 grid place-content-center"
+                    className="w-10 py-2 flex-shrink-0 grid place-content-center cursor-pointer hover:text-gray-300"
                     aria-label="Clear input button"
                     type="reset"
                   >
-                    <svg
-                      strokeLinejoin="round"
-                      strokeLinecap="round"
-                      strokeWidth="2"
-                      stroke="currentColor"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      height="20"
-                      width="20"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path d="M18 6 6 18"></path>
-                      <path d="m6 6 12 12"></path>
-                    </svg>
+                    <XIcon className="h-5 w-5" />
                   </button>
                 </form>
               </div>
+
 
               <div className="flex items-center justify-between mb-2">
                 <p className="text-xs font-semibold uppercase tracking-wide text-gray-300">
@@ -273,38 +283,70 @@ function Chatbox() {
             {/* DANH SÁCH NGƯỜI DÙNG CUỘN ĐƯỢC */}
             <div className="min-h-0 max-w-full flex flex-col flex-grow-1 pt-2">
               <ul className="space-y-2 overflow-x-hidden overflow-y-auto flex flex-col basis-0 flex-grow-1">
-                {friends.map((user) => (
-                  <li
-                    key={user.id}
-                    onClick={() => {
-                      localStorage.setItem(
-                        "selectedUser",
-                        JSON.stringify(user)
-                      );
-                      setSelectedUser(user);
-                    }}
-                    className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-[#6a5dad] transition"
-                  >
-                    <div
-                      className={`avatar ${user.isOnline ? "avatar-online" : "avatar-offline"
-                        }`}
-                    >
-                      <div className="w-10 rounded-full">
-                        <img src={user.avatar} alt={user.name} />
+                {isLoading ? (
+                  // Hiển thị 10 khối skeleton giả lập
+                  Array.from({ length: 10 }).map((_, index) => (
+                    <div key={index} className="flex items-center gap-4 w-full mb-6">
+                      <div className="skeleton h-12 w-12 shrink-0 rounded-full"></div>
+                      <div className="flex-1 flex flex-col gap-4">
+                        <div className="skeleton h-4 w-1/2"></div>
+                        <div className="skeleton h-4 w-full"></div>
                       </div>
                     </div>
-                    {/* Thông tin người dùng */}
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{user.name}</p>
-                      <p className="text-sm text-gray-300 truncate">
-                        No messages yet
-                      </p>
-                    </div>
-                  </li>
-                ))}
+                  ))
+                ) : (
+                  friends.map((user) => (
+                    <li
+                      key={user.id}
+                      onClick={() => {
+                        localStorage.setItem(
+                          "selectedUser",
+                          JSON.stringify(user)
+                        );
+                        setSelectedUser(user);
+                      }}
+                      className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-[#6a5dad] transition"
+                    >
+                      <div
+                        className={`avatar ${user.isOnline ? "avatar-online" : "avatar-offline"
+                          }`}
+                      >
+                        <div className="w-12 rounded-full">
+                          <img src={user.avatar || avaDefault} alt={user.name} />
+                        </div>
+                      </div>
+                      {/* Thông tin người dùng */}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{user.name}</p>
+                        <p className="text-sm text-gray-300 truncate">
+                          No messages yet
+                        </p>
+                      </div>
+                    </li>
+                  ))
+                )}
               </ul>
             </div>
 
+            {/* Form thêm bạn bè */}
+            <div className={`transition-all duration-500 overflow-hidden ${isAddFriendFormVisible ? 'h-[150px] opacity-100' : 'h-0 opacity-0'
+              }`} style={{
+                backgroundImage: `url(${bgLogin})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }}>
+              <div className="w-[calc(100%-144px)] h-full px-2 pt-4">
+                <form className="flex flex-col items-center justify-center gap-2 h-full">
+                  <input className="input text-gray-600 border-none focus:outline-none w-full" type="text" id="UserID" required placeholder="ID User" />
+                  <div className="flex items-center justify-between gap-2 w-full">
+                    <button type="reset" className="btn btn-outline btn-error rounded-lg min-w-[120px]" >cancel</button>
+                    <button type="submit" className="btn btn-accent rounded-lg min-w-[120px]" >add friend</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            {/* Menu (logout, add friend, profile) cái này absolute z-index cao nổi lên trên*/}
             <div className="absolute bottom-[-50px] right-[-50px] z-50">
               <div className="menu-tooltip">
                 <input type="checkbox" id="toggle" />
@@ -322,24 +364,9 @@ function Chatbox() {
                 </li>
               </div>
             </div>
-
-            <div className={`transition-all duration-500 overflow-hidden ${isAddFriendFormVisible ? 'h-[150px] opacity-100' : 'h-0 opacity-0'
-              }`} style={{
-                backgroundImage: `url(${bgLogin})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }}>
-              <div className="w-[calc(100%-144px)] h-full px-2 pt-4">
-                <form className="flex flex-col items-center justify-center gap-2 h-full">
-                  <input className="input text-gray-600 border-none focus:outline-none w-full" type="text" id="UserID" required placeholder="ID User" />
-                  <div className="flex items-center justify-between gap-2 w-full">
-                    <button type="reset" className="btn btn-outline btn-error rounded-lg min-w-[120px]" >cancel</button>
-                    <button type="submit" className="btn btn-accent rounded-lg min-w-[120px]" >add friend</button>
-                  </div>
-                </form>
-              </div>
-            </div>
           </aside>
+
+          {/* Main chat area */}
           <main className="col-span-9 min-h-0 max-w-full min-w-0 flex flex-col basis-0 relative overflow-hidden bg-transparent rounded-tr-xl rounded-br-xl">
             {selectedUser ? (
               <>
@@ -348,24 +375,36 @@ function Chatbox() {
                   <div className="flex items-center justify-between min-h-11 w-full">
                     <div className="flex items-center justify-between min-h-11 w-full">
                       <div className="flex items-center gap-3">
-                        <img
-                          src={selectedUser.avatar}
-                          alt={selectedUser.name}
-                          className="w-10 h-10 rounded-full object-cover"
-                        />
-                        <div>
-                          <p className="text-lg font-semibold text-gray-800">
-                            {selectedUser.name}
-                          </p>
-                          <p
-                            className={`text-sm ${selectedUser.isOnline
-                              ? "text-green-500"
-                              : "text-gray-500"
-                              }`}
-                          >
-                            ● {selectedUser.isOnline ? "Active now" : "Offline"}
-                          </p>
-                        </div>
+                        {isLoading ? (
+                          <div className="flex items-center gap-4 w-full">
+                            <div className="skeleton h-12 w-12 shrink-0 rounded-full"></div>
+                            <div className="flex-1 flex flex-col gap-4">
+                              <div className="skeleton h-4 w-20"></div>
+                              <div className="skeleton h-4 w-24"></div>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <img
+                              src={selectedUser?.avatar || avaDefault}
+                              alt={selectedUser?.name}
+                              className="w-12 h-12 rounded-full object-cover"
+                            />
+                            <div>
+                              <p className="text-lg font-semibold text-gray-800">
+                                {selectedUser?.name}
+                              </p>
+                              <p
+                                className={`text-sm ${selectedUser?.isOnline
+                                  ? "text-green-500"
+                                  : "text-gray-500"
+                                  }`}
+                              >
+                                ● {selectedUser?.isOnline ? "Active now" : "Offline"}
+                              </p>
+                            </div>
+                          </>
+                        )}
                       </div>
                       <div className="flex gap-4">
                         {/* Call Button */}
