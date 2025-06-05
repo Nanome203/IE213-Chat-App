@@ -10,6 +10,7 @@ import {
   BellIcon,
   Ellipsis,
   PlusIcon,
+  X,
 } from "lucide-react";
 import NoChatSelected from "@/components/NoChatSelected";
 import bgLogin from "../assets/img/bg_login.png";
@@ -35,6 +36,13 @@ function Chatbox() {
   const [friends, setFriends] = useState<User[]>([]);
   const { setIsLoggedIn } = React.useContext(authContext);
   const [showToast, setShowToast] = useState(false);
+  const [isAddFriendFormVisible, setIsAddFriendFormVisible] = useState(false);
+
+  const toggleForm = () => {
+    setIsAddFriendFormVisible(!isAddFriendFormVisible);
+  };
+
+
   // alert(localStorage.getItem("currentUserId"))
   useEffect(() => {
     async function fetchFriends() {
@@ -297,7 +305,7 @@ function Chatbox() {
               </ul>
             </div>
 
-            <div className="absolute bottom-[-50px] right-[-50px]">
+            <div className="absolute bottom-[-50px] right-[-50px] z-50">
               <div className="menu-tooltip">
                 <input type="checkbox" id="toggle" />
                 <label htmlFor="toggle" className="toggle flex items-center justify-center">
@@ -306,12 +314,29 @@ function Chatbox() {
                 <li style={{ '--i': '0' } as React.CSSProperties} className="circle-box" onClick={handleLogout}>
                   <a className="anchor"><LogOutIcon className="w-6 h-6" /></a>
                 </li>
-                <li style={{ '--i': '1' } as React.CSSProperties} className="circle-box">
-                  <a href="#" className="anchor"><UserPlus className="w-6 h-6" /></a>
+                <li style={{ '--i': '1' } as React.CSSProperties} className="circle-box" onClick={toggleForm}>
+                  <a href="#" className="anchor">{isAddFriendFormVisible ? <X className="w-6 h-6" /> : <UserPlus className="w-6 h-6" />}</a>
                 </li>
                 <li style={{ '--i': '2' } as React.CSSProperties} className="circle-box">
                   <a href="/app/profile" className="anchor"><User className="w-6 h-6" /></a>
                 </li>
+              </div>
+            </div>
+
+            <div className={`transition-all duration-500 overflow-hidden ${isAddFriendFormVisible ? 'h-[150px] opacity-100' : 'h-0 opacity-0'
+              }`} style={{
+                backgroundImage: `url(${bgLogin})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }}>
+              <div className="w-[calc(100%-144px)] h-full px-2 pt-4">
+                <form className="flex flex-col items-center justify-center gap-2 h-full">
+                  <input className="input text-gray-600 border-none focus:outline-none w-full" type="text" id="UserID" required placeholder="ID User" />
+                  <div className="flex items-center justify-between gap-2 w-full">
+                    <button type="reset" className="btn btn-outline btn-error rounded-lg min-w-[120px]" >cancel</button>
+                    <button type="submit" className="btn btn-accent rounded-lg min-w-[120px]" >add friend</button>
+                  </div>
+                </form>
               </div>
             </div>
           </aside>
