@@ -19,19 +19,11 @@ function Signup() {
     const { id, value } = e.target;
     setSignupInfo((prev) => ({
       ...prev,
-      [id]: value,
+      [id]: value.trim(),
     }));
   };
 
   const handleSignup = async () => {
-    if (signupInfo.email === "" || signupInfo.password === "") {
-      alert("Please fill in all fields.");
-      return;
-    }
-    if (signupInfo.password.length < 8) {
-      alert("Password must be at least 8 characters long.");
-      return;
-    }
     if (signupInfo.password !== signupInfo.retypePassword) {
       alert("Password is not the same");
       return;
@@ -65,39 +57,85 @@ function Signup() {
         backgroundPosition: "center",
       }}
     >
-      <div className="relative px-4 py-10 bg-white/50 bg-blur-md p-5 mx-8 md:mx-0 shadow rounded-3xl sm:p-10 h-fit animate-in slide-in-from-top">
+      <div className="relative px-4 py-10 bg-white/50 bg-blur-md p-5 mx-8 md:mx-0 shadow rounded-3xl sm:p-10 h-fit animate-in slide-in-from-top max-h-[800px] overflow-y-auto">
         <div className="flex flex-col justify-center items-center">
           <img src={logo} alt="" className="h-48 w-48" />
           <h1 className="text-2xl font-bold text-gray-800">Create Account</h1>
         </div>
         <div className="max-w-md mx-auto">
           <div className="mt-5">
-            <input
-              className="bg-white border border-neutral-600 focus-visible:outline-blue-700 rounded-lg px-3 py-2 mt-1 mb-5 text-sm text-neutral-800 w-full"
+            {/* <input
+              className="input validator bg-white border border-neutral-600 focus-visible:outline-blue-700 rounded-lg px-3 py-2 mt-1 mb-5 text-sm text-neutral-800 w-full"
               type="text"
               id="displayName"
+              required
               placeholder="Display name"
               onChange={handleInputChange}
             />
             <input
-              className="bg-white border border-neutral-600 focus-visible:outline-blue-700 rounded-lg px-3 py-2 mt-1 mb-5 text-sm text-neutral-800 w-full"
+              className="validator input bg-white border border-neutral-600 focus-visible:outline-blue-700 rounded-lg px-3 py-2 mt-1 mb-5 text-sm text-neutral-800 w-full "
               type="email"
               id="email"
+              required
+              placeholder="mail@site.com"
+              onChange={handleInputChange}
+            />
+            <input
+              className="validator input bg-white border border-neutral-600 focus-visible:outline-blue-700 rounded-lg px-3 py-2 mt-1 mb-5 text-sm text-neutral-800 w-full"
+              type="password"
+              id="password"
+              required
+              placeholder="Password"
+              minLength={8}
+              onChange={handleInputChange}
+            />
+            <input
+              className="input validator bg-white border border-neutral-600 focus-visible:outline-blue-700 rounded-lg px-3 py-2 mt-1 mb-5 text-sm text-neutral-800 w-full"
+              type="password"
+              id="retypePassword"
+              required
+              placeholder="Retype password"
+              onChange={handleInputChange}
+            /> */}
+            <input
+              type="text"
+              id="displayName"
+              className="input validator w-full"
+              required
+              placeholder="Username"
+              minLength={3}
+              maxLength={30}
+              onChange={handleInputChange}
+            />
+            <p className="validator-hint mb-2"> Must be 3 to 30 characters</p>
+            <input
+              className="input validator w-full"
+              type="email"
+              id="email"
+              required
               placeholder="Email"
               onChange={handleInputChange}
             />
+            <p className="validator-hint mb-2">Enter valid email address</p>
             <input
-              className="bg-white border border-neutral-600 focus-visible:outline-blue-700 rounded-lg px-3 py-2 mt-1 mb-5 text-sm text-neutral-800 w-full"
               type="password"
+              className="input validator w-full"
               id="password"
+              required
               placeholder="Password"
+              minLength={8}
               onChange={handleInputChange}
             />
+            <p className="validator-hint mb-2">
+              {" "}
+              Must be more than 8 characters
+            </p>
             <input
-              className="bg-white border border-neutral-600 focus-visible:outline-blue-700 rounded-lg px-3 py-2 mt-1 mb-5 text-sm text-neutral-800 w-full"
               type="password"
+              className="input validator w-full mb-4"
               id="retypePassword"
-              placeholder="Retype password"
+              required
+              placeholder="Retype Password"
               onChange={handleInputChange}
             />
           </div>
