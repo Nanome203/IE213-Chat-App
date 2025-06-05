@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState, useRef } from "react";
 import {
   Phone,
   Video,
@@ -11,9 +11,12 @@ import {
   Ellipsis,
   PlusIcon,
   X,
+  SearchIcon,
+  XIcon,
 } from "lucide-react";
 import NoChatSelected from "@/components/NoChatSelected";
 import bgLogin from "../assets/img/bg_login.png";
+import avaDefault from "../assets/img/avaDefault.png";
 import rickroll from "../assets/img/rick-roll.gif";
 import logOutGif from "../assets/img/log-out.gif";
 import MenuDropdown from "@/components/MenuDropdown";
@@ -29,17 +32,31 @@ interface User {
   isOnline: boolean;
 }
 
+interface Message {
+  id: string;
+  createdAt: string;
+  image: string;
+  text: string;
+  gif: string;
+}
+
+
 function Chatbox() {
   const [selectedUser, setSelectedUser] = useState<User | null>(
     JSON.parse(localStorage.getItem("selectedUser")!) || null
   );
   const [ws, setWS] = useState<WebSocket>();
   const [friends, setFriends] = useState<User[]>([]);
+  const [myself, setMyself] = useState<User | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]); // messages call API
+  const [isLoading, setIsLoading] = useState(true);
   const [invitors, setInvitors] = useState<User[]>([]);
   const { setIsLoggedIn } = React.useContext(authContext);
   const [showToast, setShowToast] = useState(false);
   const [isAddFriendFormVisible, setIsAddFriendFormVisible] = useState(false);
   const [wannaBefriendedUserId, setWannaBefriendedUserId] = useState("");
+
+  const messageEndRef = useRef<HTMLDivElement | null>(null);
 
   let pingInterval: NodeJS.Timeout;
   const currentUserId = localStorage.getItem("currentUserId");
@@ -91,6 +108,22 @@ function Chatbox() {
       setFriends(response.data.data);
     }
   }
+
+  async function fetchMyself() {
+    const response = await axios.get(
+      `http://localhost:3000/users/${currentUserId}`
+    );
+    if (response.data.data.length !== 0) {
+      setMyself(response.data.data);
+    }
+  }
+
+  useEffect(() => {
+    if (messageEndRef.current && messages.length > 0) {
+      messageEndRef.current.scrollIntoView({ behavior: "smooth" })
+    }
+  }, [messages]);
+
   //initialize websocket connection
   useEffect(() => {
     const ws = new WebSocket(`ws://localhost:3000/ws`);
@@ -118,6 +151,7 @@ function Chatbox() {
 
           case "isOnline": {
             fetchFriends();
+            fetchMyself();
             break;
           }
 
@@ -139,6 +173,7 @@ function Chatbox() {
 
           case "reloadAllLists": {
             fetchFriends();
+            fetchMyself();
             fetchInvitors();
             break;
           }
@@ -155,6 +190,7 @@ function Chatbox() {
   }, []);
   useEffect(() => {
     fetchFriends();
+    fetchMyself();
     fetchInvitors();
   }, []);
 
@@ -229,14 +265,23 @@ function Chatbox() {
             <div className="p-4 border-b border-[#6a5dad]">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <div className="avatar">
-                    <div className="w-10 rounded-full">
-                      <img src="https://img.daisyui.com/images/profile/demo/yellingwoman@192.webp" />
-                    </div>
-                  </div>
-                  <span className="font-semibold">
-                    {localStorage.getItem("name")}
-                  </span>
+                  {isLoading ? (
+                    <>
+                      <div className="skeleton h-12 w-12 shrink-0 rounded-full"></div>
+                      <div className="skeleton h-4 w-24"></div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="avatar">
+                        <div className="w-12 rounded-full">
+                          <img src={myself?.avatar || avaDefault} />
+                        </div>
+                      </div>
+                      <span className="font-semibold">
+                        {localStorage.getItem("name")}
+                      </span>
+                    </>
+                  )}
                 </div>
 
                 <div className="flex items-center">
@@ -263,20 +308,6 @@ function Chatbox() {
                             </div>
                             <div className="flex gap-4 ml-8">
                               <button
-                                className="btn btn-sm btn-success"
-                                onClick={() => {
-                                  ws?.send(
-                                    JSON.stringify({
-                                      type: "acceptFriendRequest",
-                                      invitor: invitor.id,
-                                      invited: currentUserId,
-                                    })
-                                  );
-                                }}
-                              >
-                                Accept
-                              </button>
-                              <button
                                 className="btn btn-sm btn-outline"
                                 onClick={() => {
                                   ws?.send(
@@ -289,6 +320,20 @@ function Chatbox() {
                                 }}
                               >
                                 Decline
+                              </button>
+                              <button
+                                className="btn btn-sm btn-success"
+                                onClick={() => {
+                                  ws?.send(
+                                    JSON.stringify({
+                                      type: "acceptFriendRequest",
+                                      invitor: invitor.id,
+                                      invited: currentUserId,
+                                    })
+                                  );
+                                }}
+                              >
+                                Accept
                               </button>
                             </div>
                           </div>
@@ -324,52 +369,29 @@ function Chatbox() {
                 </div>
               </div>
 
-              <div className="mb-3 relative flex items-center justify-center">
-                <form className="flex items-center justify-center bg-[#6c5f9b] text-white rounded-md shadow text-base w-10/12 focus-within:w-full transition-all">
-                  <div
-                    aria-disabled="true"
-                    className="w-10 grid place-content-center"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <circle cx="11" cy="11" r="8"></circle>
-                      <path d="m21 21-4.3-4.3"></path>
-                    </svg>
+              <div className="mb-3 px-2">
+                <form
+                  className="
+      flex items-center bg-[#6c5f9b] text-white rounded-md shadow text-base
+      w-10/12 focus-within:w-full transition-all duration-300
+      mx-auto max-w-full
+    "
+                >
+                  <div className="w-10 flex-shrink-0 grid place-content-center">
+                    <SearchIcon className="h-5 w-5" />
                   </div>
                   <input
                     type="text"
                     name="text"
-                    className="bg-transparent py-2.5 outline-none placeholder:text-zinc-400 flex-1"
+                    className="bg-transparent py-2.5 px-2 outline-none placeholder:text-zinc-300 text-sm flex-1 min-w-0"
                     placeholder="Search..."
                   />
                   <button
-                    className="w-10 grid place-content-center"
+                    className="w-10 py-2 flex-shrink-0 grid place-content-center cursor-pointer hover:text-gray-300"
                     aria-label="Clear input button"
                     type="reset"
                   >
-                    <svg
-                      strokeLinejoin="round"
-                      strokeLinecap="round"
-                      strokeWidth="2"
-                      stroke="currentColor"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      height="20"
-                      width="20"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path d="M18 6 6 18"></path>
-                      <path d="m6 6 12 12"></path>
-                    </svg>
+                    <XIcon className="h-5 w-5" />
                   </button>
                 </form>
               </div>
@@ -399,36 +421,47 @@ function Chatbox() {
             {/* DANH SÁCH NGƯỜI DÙNG CUỘN ĐƯỢC */}
             <div className="min-h-0 max-w-full flex flex-col flex-grow-1 pt-2">
               <ul className="space-y-2 overflow-x-hidden overflow-y-auto flex flex-col basis-0 flex-grow-1">
-                {friends.map((user) => (
-                  <li
-                    key={user.id}
-                    onClick={() => {
-                      localStorage.setItem(
-                        "selectedUser",
-                        JSON.stringify(user)
-                      );
-                      setSelectedUser(user);
-                    }}
-                    className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-[#6a5dad] transition"
-                  >
-                    <div
-                      className={`avatar ${
-                        user.isOnline ? "avatar-online" : "avatar-offline"
-                      }`}
-                    >
-                      <div className="w-10 rounded-full">
-                        <img src={user.avatar} alt={user.name} />
+                {isLoading ? (
+                  // Hiển thị 10 khối skeleton giả lập
+                  Array.from({ length: 10 }).map((_, index) => (
+                    <div key={index} className="flex items-center gap-4 w-full mb-6">
+                      <div className="skeleton h-12 w-12 shrink-0 rounded-full"></div>
+                      <div className="flex-1 flex flex-col gap-4">
+                        <div className="skeleton h-4 w-1/2"></div>
+                        <div className="skeleton h-4 w-full"></div>
                       </div>
                     </div>
-                    {/* Thông tin người dùng */}
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{user.name}</p>
-                      <p className="text-sm text-gray-300 truncate">
-                        No messages yet
-                      </p>
-                    </div>
-                  </li>
-                ))}
+                  ))) : (
+                  friends.map((user) => (
+                    <li
+                      key={user.id}
+                      onClick={() => {
+                        localStorage.setItem(
+                          "selectedUser",
+                          JSON.stringify(user)
+                        );
+                        setSelectedUser(user);
+                      }}
+                      className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-[#6a5dad] transition"
+                    >
+                      <div
+                        className={`avatar ${user.isOnline ? "avatar-online" : "avatar-offline"
+                          }`}
+                      >
+                        <div className="w-12 rounded-full">
+                          <img src={user.avatar || avaDefault} alt={user.name} />
+                        </div>
+                      </div>
+                      {/* Thông tin người dùng */}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{user.name}</p>
+                        <p className="text-sm text-gray-300 truncate">
+                          No messages yet
+                        </p>
+                      </div>
+                    </li>
+                  ))
+                )}
               </ul>
             </div>
 
@@ -478,11 +511,10 @@ function Chatbox() {
             </div>
 
             <div
-              className={`transition-all duration-500 overflow-hidden ${
-                isAddFriendFormVisible
-                  ? "h-[150px] opacity-100"
-                  : "h-0 opacity-0"
-              }`}
+              className={`transition-all duration-500 overflow-hidden ${isAddFriendFormVisible
+                ? "h-[150px] opacity-100"
+                : "h-0 opacity-0"
+                }`}
               style={{
                 backgroundImage: `url(${bgLogin})`,
                 backgroundSize: "cover",
@@ -529,25 +561,36 @@ function Chatbox() {
                   <div className="flex items-center justify-between min-h-11 w-full">
                     <div className="flex items-center justify-between min-h-11 w-full">
                       <div className="flex items-center gap-3">
-                        <img
-                          src={selectedUser.avatar}
-                          alt={selectedUser.name}
-                          className="w-10 h-10 rounded-full object-cover"
-                        />
-                        <div>
-                          <p className="text-lg font-semibold text-gray-800">
-                            {selectedUser.name}
-                          </p>
-                          <p
-                            className={`text-sm ${
-                              selectedUser.isOnline
-                                ? "text-green-500"
-                                : "text-gray-500"
-                            }`}
-                          >
-                            ● {selectedUser.isOnline ? "Active now" : "Offline"}
-                          </p>
-                        </div>
+                        {isLoading ? (
+                          <div className="flex items-center gap-4 w-full">
+                            <div className="skeleton h-12 w-12 shrink-0 rounded-full"></div>
+                            <div className="flex-1 flex flex-col gap-4">
+                              <div className="skeleton h-4 w-20"></div>
+                              <div className="skeleton h-4 w-24"></div>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <img
+                              src={selectedUser?.avatar || avaDefault}
+                              alt={selectedUser?.name}
+                              className="w-12 h-12 rounded-full object-cover"
+                            />
+                            <div>
+                              <p className="text-lg font-semibold text-gray-800">
+                                {selectedUser?.name}
+                              </p>
+                              <p
+                                className={`text-sm ${selectedUser?.isOnline
+                                  ? "text-green-500"
+                                  : "text-gray-500"
+                                  }`}
+                              >
+                                ● {selectedUser?.isOnline ? "Active now" : "Offline"}
+                              </p>
+                            </div>
+                          </>
+                        )}
                       </div>
                       <div className="flex gap-4">
                         {/* Call Button */}
@@ -585,7 +628,34 @@ function Chatbox() {
                   }}
                 >
                   {/* chat container */}
-                  <div className="overflow-x-hidden overflow-y-auto flex flex-col basis-0 flex-grow-1"></div>
+                  <div className="overflow-x-hidden overflow-y-auto flex flex-col basis-0 flex-grow-1">
+                    {messages.map((message) => (
+                      <div
+                        key={message.id}
+                        className={`chat ${message.id === myself?.id ? "chat-end" : "chat-start"}`}
+                        ref={messageEndRef}
+                      >
+                        <div className="chat-image avatar">
+                          <div className="w-10 rounded-full">
+                            <img
+                              alt="avatar"
+                              src={message.id === myself?.id ? myself.avatar || avaDefault : selectedUser.avatar || avaDefault}
+                            />
+                          </div>
+                        </div>
+                        <div className="chat-header mb-1">
+                          {message.id === myself?.id ? myself.name : selectedUser.name}
+                          <time className="text-xs opacity-50">{message.createdAt}</time>
+                        </div>
+                        <div className="chat-bubble flex flex-col">
+                          {message.image && (<img src={message.image} className="sm:max-w-[200px] rounded-md mb-2" />)}
+                          {message.gif && (<img src={message.gif} className="sm:max-w-[200px] rounded-md mb-2" />)}
+                          {message.text && <p>{message.text}</p>}
+                        </div>
+                        <div className="chat-footer opacity-50">Delivered</div>
+                      </div>
+                    ))}
+                  </div>
 
                   {/* chat input */}
                   <MessageInput onSend={() => console.log("Send clicked")} />
