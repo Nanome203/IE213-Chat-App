@@ -58,7 +58,7 @@ export const userRoute = new Elysia({ prefix: "/users" })
       checkInvalidToken: true,
     }
   )
-  .put(
+  .patch(
     "/:id",
     async ({ body: { name, password, phone, avatar }, params: { id } }) => {
       let updatedUser: User = {
@@ -79,7 +79,25 @@ export const userRoute = new Elysia({ prefix: "/users" })
       }
 
       if (avatar) {
-        // do nothing for now
+        const fileName = `${id}/${Date.now()}_${(avatar as File).name}`;
+
+        // uploading image to bucket
+        const { data, error } = await supabase.storage
+          .from("bun-chat-app-bucket")
+          .upload(fileName, avatar);
+        if (error) {
+          console.error("Error uploading avatar:", error);
+          return null;
+        }
+
+        // retrieving image's public url after uploading to bucket
+        const {
+          data: { publicUrl },
+        } = supabase.storage
+          .from("bun-chat-app-bucket")
+          .getPublicUrl(data.path);
+
+        updatedUser = { ...updatedUser, image_url: publicUrl };
       }
 
       try {
@@ -117,9 +135,9 @@ export const userRoute = new Elysia({ prefix: "/users" })
     {
       body: t.Object({
         name: t.Optional(t.String()),
-        password: t.Optional(t.String({ minLength: 8 })),
+        password: t.Optional(t.String()),
         phone: t.Optional(t.String()),
-        avatar: t.Optional(t.File()),
+        avatar: t.Optional(t.Union([t.File(), t.String()])),
       }),
       checkInvalidToken: true,
     }
