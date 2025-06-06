@@ -287,9 +287,7 @@ function Chatbox() {
                           <img src={myself?.avatar || avaDefault} />
                         </div>
                       </div>
-                      <span className="font-semibold">
-                        {localStorage.getItem("name")}
-                      </span>
+                      <span className="font-semibold">{myself?.name}</span>
                     </>
                   )}
                 </div>
