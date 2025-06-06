@@ -95,27 +95,27 @@ function Chatbox() {
     const response = await axios.get(
       `http://localhost:3000/users/${currentUserId}/invitors`
     );
-    if (response.data.data.length !== 0) {
-      setInvitors(response.data.data);
-    }
+    // if (response.data.data.length !== 0) {
+    //   setInvitors(response.data.data);
+    // }
   }
 
   async function fetchFriends() {
     const response = await axios.get(
       `http://localhost:3000/users/${currentUserId}/friends`
     );
-    if (response.data.data.length !== 0) {
-      setFriends(response.data.data);
-    }
+    // if (response.data.data.length !== 0) {
+    //   setFriends(response.data.data);
+    // }
   }
 
   async function fetchMyself() {
     const response = await axios.get(
       `http://localhost:3000/users/${currentUserId}`
     );
-    if (response.data.data.length !== 0) {
-      setMyself(response.data.data);
-    }
+    // if (response.data.data.length !== 0) {
+    //   setMyself(response.data.data);
+    // }
   }
 
   useEffect(() => {
@@ -285,63 +285,67 @@ function Chatbox() {
                 </div>
 
                 <div className="flex items-center">
-                  <MenuDropdown
-                    triggerIcon={<BellIcon className="w-6 h-6 text-white" />}
-                    menuBgColor="bg-white/80"
-                    menuTextColor="text-gray-600"
-                    customContent={() => (
-                      <div className="flex flex-col gap-4 p-2 max-h-[400px] overflow-y-auto">
-                        {invitors?.map((invitor) => (
-                          <div
-                            key={invitor.id}
-                            className="flex flex-col items-center gap-4"
-                          >
-                            <div className="flex items-center gap-4">
-                              <div className="avatar">
-                                <div className="w-10 rounded-full">
-                                  <img src={invitor.avatar} />
+                  <div className="relative">
+                    <MenuDropdown
+                      triggerIcon={<BellIcon className="w-6 h-6 text-white" />}
+                      menuBgColor="bg-white/80"
+                      menuTextColor="text-gray-600"
+                      customContent={() => (
+                        <div className="flex flex-col gap-4 p-2 max-h-[400px] overflow-y-auto">
+                          {invitors?.map((invitor) => (
+                            <div
+                              key={invitor.id}
+                              className="flex flex-col items-center gap-4"
+                            >
+                              <div className="flex items-center gap-4">
+                                <div className="avatar">
+                                  <div className="w-10 rounded-full">
+                                    <img src={invitor.avatar} />
+                                  </div>
                                 </div>
+                                <p className="text-sm font-medium">
+                                  {invitor.name} sent you a friend request
+                                </p>
                               </div>
-                              <p className="text-sm font-medium">
-                                {invitor.name} sent you a friend request
-                              </p>
+                              <div className="flex gap-4 ml-8">
+                                <button
+                                  className="btn btn-sm btn-outline"
+                                  onClick={() => {
+                                    ws?.send(
+                                      JSON.stringify({
+                                        type: "declineFriendRequest",
+                                        invitor: invitor.id,
+                                        invited: currentUserId,
+                                      })
+                                    );
+                                  }}
+                                >
+                                  Decline
+                                </button>
+                                <button
+                                  className="btn btn-sm btn-success"
+                                  onClick={() => {
+                                    ws?.send(
+                                      JSON.stringify({
+                                        type: "acceptFriendRequest",
+                                        invitor: invitor.id,
+                                        invited: currentUserId,
+                                      })
+                                    );
+                                  }}
+                                >
+                                  Accept
+                                </button>
+                              </div>
                             </div>
-                            <div className="flex gap-4 ml-8">
-                              <button
-                                className="btn btn-sm btn-outline"
-                                onClick={() => {
-                                  ws?.send(
-                                    JSON.stringify({
-                                      type: "declineFriendRequest",
-                                      invitor: invitor.id,
-                                      invited: currentUserId,
-                                    })
-                                  );
-                                }}
-                              >
-                                Decline
-                              </button>
-                              <button
-                                className="btn btn-sm btn-success"
-                                onClick={() => {
-                                  ws?.send(
-                                    JSON.stringify({
-                                      type: "acceptFriendRequest",
-                                      invitor: invitor.id,
-                                      invited: currentUserId,
-                                    })
-                                  );
-                                }}
-                              >
-                                Accept
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  />
-
+                          ))}
+                        </div>
+                      )}
+                    />
+                    {invitors.length > 0 &&
+                      <div className="absolute p-1 rounded-full bg-red-500 top-2 right-2"></div>
+                    }
+                  </div>
                   {/* <MenuDropdown
                     position="bottom-right"
                     iconColor="fill-white"
