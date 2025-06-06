@@ -262,4 +262,84 @@ export const userRoute = new Elysia({ prefix: "/users" })
         invitedId: t.String(),
       }),
     }
+  )
+  .get(
+    "/:id/messages/:friendId",
+    async ({ params: { id, friendId } }) => {
+      const { data, error } = await supabase
+        .from("messages")
+        .select("id, sender, text, image, createdAt: created_at")
+        .or(
+          `and(sender.eq.${id}, receiver.eq.${friendId}),and(sender.eq.${friendId}, receiver.eq.${id}) `
+        )
+        .order("created_at", { ascending: true });
+      if (error) {
+        return {
+          status: 500,
+          message: error.message,
+        };
+      }
+      return {
+        status: 200,
+        data,
+      };
+    },
+    {
+      checkInvalidToken: true,
+    }
+  )
+  .post(
+    "/:id/messages/:friendId",
+    async ({ params: { id, friendId }, body: { text, image } }) => {
+      let newMessage: {
+        sender: string;
+        receiver: string;
+        text: string;
+        image: string;
+      } = { sender: id, receiver: friendId, text: "", image: "" };
+      if (text) {
+        newMessage = { ...newMessage, text };
+      }
+      if (image) {
+        const fileName = `messages/images/${id + "_" + friendId}/${Date.now()}_${(image as File).name}`;
+
+        // uploading image to bucket
+        const { data, error } = await supabase.storage
+          .from("bun-chat-app-bucket")
+          .upload(fileName, image);
+        if (error) {
+          console.error("Error uploading avatar:", error);
+          return null;
+        }
+
+        // retrieving image's public url after uploading to bucket
+        const {
+          data: { publicUrl },
+        } = supabase.storage
+          .from("bun-chat-app-bucket")
+          .getPublicUrl(data.path);
+        newMessage = { ...newMessage, image: publicUrl };
+      }
+      const { data, error } = await supabase
+        .from("messages")
+        .insert(newMessage)
+        .select("id, sender, text, image, createdAt: created_at");
+      if (error) {
+        return {
+          status: 500,
+          message: error.message,
+        };
+      }
+      return {
+        status: 200,
+        data: data[0],
+      };
+    },
+    {
+      body: t.Object({
+        text: t.Optional(t.String()),
+        image: t.Optional(t.File()),
+      }),
+      checkInvalidToken: true,
+    }
   );
