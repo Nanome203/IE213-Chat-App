@@ -40,17 +40,17 @@ interface Message {
   gif: string;
 }
 
-
 function Chatbox() {
   const [selectedUser, setSelectedUser] = useState<User | null>(
     JSON.parse(localStorage.getItem("selectedUser")!) || null
   );
   const [ws, setWS] = useState<WebSocket>();
   const [friends, setFriends] = useState<User[]>([]);
+  const [invitors, setInvitors] = useState<User[]>([]);
   const [myself, setMyself] = useState<User | null>(null);
   const [messages, setMessages] = useState<Message[]>([]); // messages call API
-  const [isLoading, setIsLoading] = useState(true);
-  const [invitors, setInvitors] = useState<User[]>([]);
+  const [friendIsLoading, setFriendIsLoading] = useState(true);
+  const [invitorsIsLoading, setInvitorsIsLoading] = useState(true);
   const { setIsLoggedIn } = React.useContext(authContext);
   const [showToast, setShowToast] = useState(false);
   const [isAddFriendFormVisible, setIsAddFriendFormVisible] = useState(false);
@@ -92,35 +92,45 @@ function Chatbox() {
   };
 
   async function fetchInvitors() {
+    setInvitorsIsLoading(true);
     const response = await axios.get(
       `http://localhost:3000/users/${currentUserId}/invitors`
     );
-    // if (response.data.data.length !== 0) {
-    //   setInvitors(response.data.data);
-    // }
+    if (response.data.data?.length !== 0) {
+      setInvitors(response.data.data);
+    } else {
+      setInvitors([]);
+    }
+    setInvitorsIsLoading(false);
   }
 
   async function fetchFriends() {
+    setFriendIsLoading(true);
     const response = await axios.get(
       `http://localhost:3000/users/${currentUserId}/friends`
     );
-    // if (response.data.data.length !== 0) {
-    //   setFriends(response.data.data);
-    // }
+    if (response.data.data?.length !== 0) {
+      setFriends(response.data.data);
+    } else {
+      setFriends([]);
+    }
+    setFriendIsLoading(false);
   }
 
   async function fetchMyself() {
     const response = await axios.get(
       `http://localhost:3000/users/${currentUserId}`
     );
-    // if (response.data.data.length !== 0) {
-    //   setMyself(response.data.data);
-    // }
+    if (response.data.data?.length !== 0) {
+      setMyself(response.data.data[0]);
+    } else {
+      setMyself(null);
+    }
   }
 
   useEffect(() => {
     if (messageEndRef.current && messages.length > 0) {
-      messageEndRef.current.scrollIntoView({ behavior: "smooth" })
+      messageEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
 
@@ -172,9 +182,9 @@ function Chatbox() {
           }
 
           case "reloadAllLists": {
+            fetchInvitors();
             fetchFriends();
             fetchMyself();
-            fetchInvitors();
             break;
           }
           default:
@@ -265,7 +275,7 @@ function Chatbox() {
             <div className="p-4 border-b border-[#6a5dad]">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  {isLoading ? (
+                  {friendIsLoading ? (
                     <>
                       <div className="skeleton h-12 w-12 shrink-0 rounded-full"></div>
                       <div className="skeleton h-4 w-24"></div>
@@ -292,59 +302,65 @@ function Chatbox() {
                       menuTextColor="text-gray-600"
                       customContent={() => (
                         <div className="flex flex-col gap-4 p-2 max-h-[400px] overflow-y-auto">
-                          {invitors?.map((invitor) => (
-                            <div
-                              key={invitor.id}
-                              className="flex flex-col items-center gap-4"
-                            >
-                              <div className="flex items-center gap-4">
-                                <div className="avatar">
-                                  <div className="w-10 rounded-full">
-                                    <img src={invitor.avatar} />
+                          {invitors?.length > 0 ? (
+                            invitors?.map((invitor) => (
+                              <div
+                                key={invitor.id}
+                                className="flex flex-col items-center gap-4"
+                              >
+                                <div className="flex items-center gap-4">
+                                  <div className="avatar">
+                                    <div className="w-10 rounded-full">
+                                      <img src={invitor.avatar} />
+                                    </div>
                                   </div>
+                                  <p className="text-sm font-medium">
+                                    {invitor.name} sent you a friend request
+                                  </p>
                                 </div>
-                                <p className="text-sm font-medium">
-                                  {invitor.name} sent you a friend request
-                                </p>
+                                <div className="flex gap-4 ml-8">
+                                  <button
+                                    className="btn btn-sm btn-outline"
+                                    onClick={() => {
+                                      ws?.send(
+                                        JSON.stringify({
+                                          type: "declineFriendRequest",
+                                          invitor: invitor.id,
+                                          invited: currentUserId,
+                                        })
+                                      );
+                                    }}
+                                  >
+                                    Decline
+                                  </button>
+                                  <button
+                                    className="btn btn-sm btn-success"
+                                    onClick={() => {
+                                      ws?.send(
+                                        JSON.stringify({
+                                          type: "acceptFriendRequest",
+                                          invitor: invitor.id,
+                                          invited: currentUserId,
+                                        })
+                                      );
+                                    }}
+                                  >
+                                    Accept
+                                  </button>
+                                </div>
                               </div>
-                              <div className="flex gap-4 ml-8">
-                                <button
-                                  className="btn btn-sm btn-outline"
-                                  onClick={() => {
-                                    ws?.send(
-                                      JSON.stringify({
-                                        type: "declineFriendRequest",
-                                        invitor: invitor.id,
-                                        invited: currentUserId,
-                                      })
-                                    );
-                                  }}
-                                >
-                                  Decline
-                                </button>
-                                <button
-                                  className="btn btn-sm btn-success"
-                                  onClick={() => {
-                                    ws?.send(
-                                      JSON.stringify({
-                                        type: "acceptFriendRequest",
-                                        invitor: invitor.id,
-                                        invited: currentUserId,
-                                      })
-                                    );
-                                  }}
-                                >
-                                  Accept
-                                </button>
-                              </div>
+                            ))
+                          ) : (
+                            <div className="h-[200px] flex items-center justify-center ">
+                              No notifications
                             </div>
-                          ))}
+                          )}
                         </div>
                       )}
                     />
-                    {invitors.length > 0 &&
+                    {invitors.length > 0 && (
                       <div className="absolute p-1 rounded-full bg-red-500 top-2 right-2"></div>
-                    }
+                    )}
                   </div>
                   {/* <MenuDropdown
                     position="bottom-right"
@@ -425,47 +441,53 @@ function Chatbox() {
             {/* DANH SÁCH NGƯỜI DÙNG CUỘN ĐƯỢC */}
             <div className="min-h-0 max-w-full flex flex-col flex-grow-1 pt-2">
               <ul className="space-y-2 overflow-x-hidden overflow-y-auto flex flex-col basis-0 flex-grow-1">
-                {isLoading ? (
-                  // Hiển thị 10 khối skeleton giả lập
-                  Array.from({ length: 10 }).map((_, index) => (
-                    <div key={index} className="flex items-center gap-4 w-full mb-6">
-                      <div className="skeleton h-12 w-12 shrink-0 rounded-full"></div>
-                      <div className="flex-1 flex flex-col gap-4">
-                        <div className="skeleton h-4 w-1/2"></div>
-                        <div className="skeleton h-4 w-full"></div>
-                      </div>
-                    </div>
-                  ))) : (
-                  friends.map((user) => (
-                    <li
-                      key={user.id}
-                      onClick={() => {
-                        localStorage.setItem(
-                          "selectedUser",
-                          JSON.stringify(user)
-                        );
-                        setSelectedUser(user);
-                      }}
-                      className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-[#6a5dad] transition"
-                    >
+                {friendIsLoading
+                  ? // Hiển thị 10 khối skeleton giả lập
+                    Array.from({ length: 10 }).map((_, index) => (
                       <div
-                        className={`avatar ${user.isOnline ? "avatar-online" : "avatar-offline"
-                          }`}
+                        key={index}
+                        className="flex items-center gap-4 w-full mb-6"
                       >
-                        <div className="w-12 rounded-full">
-                          <img src={user.avatar || avaDefault} alt={user.name} />
+                        <div className="skeleton h-12 w-12 shrink-0 rounded-full"></div>
+                        <div className="flex-1 flex flex-col gap-4">
+                          <div className="skeleton h-4 w-1/2"></div>
+                          <div className="skeleton h-4 w-full"></div>
                         </div>
                       </div>
-                      {/* Thông tin người dùng */}
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">{user.name}</p>
-                        <p className="text-sm text-gray-300 truncate">
-                          No messages yet
-                        </p>
-                      </div>
-                    </li>
-                  ))
-                )}
+                    ))
+                  : friends.map((user) => (
+                      <li
+                        key={user.id}
+                        onClick={() => {
+                          localStorage.setItem(
+                            "selectedUser",
+                            JSON.stringify(user)
+                          );
+                          setSelectedUser(user);
+                        }}
+                        className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-[#6a5dad] transition"
+                      >
+                        <div
+                          className={`avatar ${
+                            user.isOnline ? "avatar-online" : "avatar-offline"
+                          }`}
+                        >
+                          <div className="w-12 rounded-full">
+                            <img
+                              src={user.avatar || avaDefault}
+                              alt={user.name}
+                            />
+                          </div>
+                        </div>
+                        {/* Thông tin người dùng */}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{user.name}</p>
+                          <p className="text-sm text-gray-300 truncate">
+                            No messages yet
+                          </p>
+                        </div>
+                      </li>
+                    ))}
               </ul>
             </div>
 
@@ -515,10 +537,11 @@ function Chatbox() {
             </div>
 
             <div
-              className={`transition-all duration-500 overflow-hidden ${isAddFriendFormVisible
-                ? "h-[150px] opacity-100"
-                : "h-0 opacity-0"
-                }`}
+              className={`transition-all duration-500 overflow-hidden ${
+                isAddFriendFormVisible
+                  ? "h-[150px] opacity-100"
+                  : "h-0 opacity-0"
+              }`}
               style={{
                 backgroundImage: `url(${bgLogin})`,
                 backgroundSize: "cover",
@@ -565,7 +588,7 @@ function Chatbox() {
                   <div className="flex items-center justify-between min-h-11 w-full">
                     <div className="flex items-center justify-between min-h-11 w-full">
                       <div className="flex items-center gap-3">
-                        {isLoading ? (
+                        {friendIsLoading ? (
                           <div className="flex items-center gap-4 w-full">
                             <div className="skeleton h-12 w-12 shrink-0 rounded-full"></div>
                             <div className="flex-1 flex flex-col gap-4">
@@ -585,12 +608,16 @@ function Chatbox() {
                                 {selectedUser?.name}
                               </p>
                               <p
-                                className={`text-sm ${selectedUser?.isOnline
-                                  ? "text-green-500"
-                                  : "text-gray-500"
-                                  }`}
+                                className={`text-sm ${
+                                  selectedUser?.isOnline
+                                    ? "text-green-500"
+                                    : "text-gray-500"
+                                }`}
                               >
-                                ● {selectedUser?.isOnline ? "Active now" : "Offline"}
+                                ●{" "}
+                                {selectedUser?.isOnline
+                                  ? "Active now"
+                                  : "Offline"}
                               </p>
                             </div>
                           </>
@@ -643,17 +670,35 @@ function Chatbox() {
                           <div className="w-10 rounded-full">
                             <img
                               alt="avatar"
-                              src={message.id === myself?.id ? myself.avatar || avaDefault : selectedUser.avatar || avaDefault}
+                              src={
+                                message.id === myself?.id
+                                  ? myself.avatar || avaDefault
+                                  : selectedUser.avatar || avaDefault
+                              }
                             />
                           </div>
                         </div>
                         <div className="chat-header mb-1">
-                          {message.id === myself?.id ? myself.name : selectedUser.name}
-                          <time className="text-xs opacity-50">{message.createdAt}</time>
+                          {message.id === myself?.id
+                            ? myself.name
+                            : selectedUser.name}
+                          <time className="text-xs opacity-50">
+                            {message.createdAt}
+                          </time>
                         </div>
                         <div className="chat-bubble flex flex-col">
-                          {message.image && (<img src={message.image} className="sm:max-w-[200px] rounded-md mb-2" />)}
-                          {message.gif && (<img src={message.gif} className="sm:max-w-[200px] rounded-md mb-2" />)}
+                          {message.image && (
+                            <img
+                              src={message.image}
+                              className="sm:max-w-[200px] rounded-md mb-2"
+                            />
+                          )}
+                          {message.gif && (
+                            <img
+                              src={message.gif}
+                              className="sm:max-w-[200px] rounded-md mb-2"
+                            />
+                          )}
                           {message.text && <p>{message.text}</p>}
                         </div>
                         <div className="chat-footer opacity-50">Delivered</div>
