@@ -23,21 +23,14 @@ import MenuDropdown from "@/components/MenuDropdown";
 import MessageInput from "@/components/MessageInput";
 import axios from "axios";
 import { authContext } from "@/context";
-import { SocketMsg } from "@/utils/types";
+import { Message, SocketMsg } from "@/utils/types";
+import { isLastMessage, normalizeDate } from "@/utils/etc";
 
 interface User {
   id: string;
   name: string;
   avatar: string;
   isOnline: boolean;
-}
-
-interface Message {
-  id: string;
-  createdAt: string;
-  image: string;
-  text: string;
-  gif: string;
 }
 
 function Chatbox() {
@@ -49,8 +42,10 @@ function Chatbox() {
   const [invitors, setInvitors] = useState<User[]>([]);
   const [myself, setMyself] = useState<User | null>(null);
   const [messages, setMessages] = useState<Message[]>([]); // messages call API
-  const [friendIsLoading, setFriendIsLoading] = useState(true);
-  const [invitorsIsLoading, setInvitorsIsLoading] = useState(true);
+  const [friendIsLoading, setFriendIsLoading] = useState(false);
+  const [invitorsIsLoading, setInvitorsIsLoading] = useState(false);
+  const [messagesAreLoading, setMessagesAreLoading] = useState(false);
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
   const { setIsLoggedIn } = React.useContext(authContext);
   const [showToast, setShowToast] = useState(false);
   const [isAddFriendFormVisible, setIsAddFriendFormVisible] = useState(false);
@@ -65,6 +60,18 @@ function Chatbox() {
     setIsAddFriendFormVisible(!isAddFriendFormVisible);
   };
 
+  const handleFriendClicked = async (user: User) => {
+    // Store the selected user so that when we reload the page, the chat with selected user will still be opened
+    localStorage.setItem("selectedUser", JSON.stringify(user));
+    setSelectedUser(user);
+
+    try {
+      fetchMessages(user);
+    } catch {
+      // retry fetching
+      fetchMessages(user);
+    }
+  };
   const sendFriendRequest = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (wannaBefriendedUserId.trim() === currentUserId?.trim()) {
@@ -91,6 +98,18 @@ function Chatbox() {
     }
   };
 
+  async function fetchMessages(user: User) {
+    setMessagesAreLoading(true);
+    let response = await axios.get(
+      `http://localhost:3000/users/${currentUserId}/messages/${user.id}`
+    );
+    if (response.data.data.length === 0) {
+      setMessages([]);
+    } else {
+      setMessages(response.data.data);
+    }
+    setMessagesAreLoading(false);
+  }
   async function fetchInvitors() {
     setInvitorsIsLoading(true);
     const response = await axios.get(
@@ -187,6 +206,12 @@ function Chatbox() {
             fetchMyself();
             break;
           }
+
+          case "syncMessage": {
+            if (selectedUser) {
+              fetchMessages(selectedUser);
+            }
+          }
           default:
             break;
         }
@@ -202,6 +227,9 @@ function Chatbox() {
     fetchFriends();
     fetchMyself();
     fetchInvitors();
+    if (selectedUser) {
+      fetchMessages(selectedUser);
+    }
   }, []);
 
   const handleLogout = async () => {
@@ -456,13 +484,7 @@ function Chatbox() {
                   : friends.map((user) => (
                       <li
                         key={user.id}
-                        onClick={() => {
-                          localStorage.setItem(
-                            "selectedUser",
-                            JSON.stringify(user)
-                          );
-                          setSelectedUser(user);
-                        }}
+                        onClick={() => handleFriendClicked(user)}
                         className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-[#6a5dad] transition"
                       >
                         <div
@@ -651,44 +673,50 @@ function Chatbox() {
                 <div
                   className="bg-[#f0e5ff]  min-h-0 max-w-full flex flex-col flex-grow-1"
                   style={{
-                    backgroundImage: `url(${rickroll})`,
+                    // backgroundImage: `url(${rickroll})`,
                     backgroundSize: "cover",
                     backgroundPosition: "center",
                   }}
                 >
                   {/* chat container */}
                   <div className="overflow-x-hidden overflow-y-auto flex flex-col basis-0 flex-grow-1">
-                    {messages.map((message) => (
+                    {messages?.map((message) => (
                       <div
                         key={message.id}
-                        className={`chat ${message.id === myself?.id ? "chat-end" : "chat-start"}`}
+                        className={`chat ${message.sender === myself?.id ? "chat-end" : "chat-start"}`}
                         ref={messageEndRef}
                       >
-                        <div className="chat-image avatar">
+                        <div
+                          className={`chat-image avatar ${message.sender === myself?.id ? "mr-4" : "ml-4"}`}
+                        >
                           <div className="w-10 rounded-full">
                             <img
                               alt="avatar"
                               src={
-                                message.id === myself?.id
-                                  ? myself.avatar || avaDefault
+                                message.sender === myself?.id
+                                  ? myself?.avatar || avaDefault
                                   : selectedUser.avatar || avaDefault
                               }
                             />
                           </div>
                         </div>
                         <div className="chat-header mb-1">
-                          {message.id === myself?.id
-                            ? myself.name
+                          {message.sender === myself?.id
+                            ? myself?.name
                             : selectedUser.name}
                           <time className="text-xs opacity-50">
-                            {message.createdAt}
+                            {normalizeDate(message.createdAt)}
                           </time>
                         </div>
-                        <div className="chat-bubble flex flex-col">
+                        <div className="chat-bubble flex flex-col items-center justify-center">
                           {message.image && (
                             <img
-                              src={message.image}
-                              className="sm:max-w-[200px] rounded-md mb-2"
+                              src={
+                                typeof message.image === "string"
+                                  ? message.image
+                                  : avaDefault
+                              }
+                              className="sm:max-w-11/12 rounded-md mb-2"
                             />
                           )}
                           {message.gif && (
@@ -699,13 +727,35 @@ function Chatbox() {
                           )}
                           {message.text && <p>{message.text}</p>}
                         </div>
-                        <div className="chat-footer opacity-50">Delivered</div>
+                        <div className="chat-footer opacity-50">
+                          {isSendingMessage
+                            ? "Sending"
+                            : message.sender === myself?.id &&
+                              isLastMessage(messages, message) &&
+                              "Delivered"}
+                        </div>
                       </div>
                     ))}
                   </div>
 
                   {/* chat input */}
-                  <MessageInput onSend={() => console.log("Send clicked")} />
+                  <MessageInput
+                    messages={messages}
+                    setMessages={setMessages}
+                    onStartSending={() => {
+                      setIsSendingMessage(true);
+                    }}
+                    onFinishedSending={() => {
+                      setIsSendingMessage(false);
+                      ws?.send(
+                        JSON.stringify({
+                          type: "syncMessage",
+                          sender: currentUserId,
+                          receiver: selectedUser.id,
+                        })
+                      );
+                    }}
+                  />
                 </div>
               </>
             ) : (
