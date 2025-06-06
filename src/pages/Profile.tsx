@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ArrowLeftIcon, CameraIcon, Edit } from "lucide-react";
 import bgLogin from "../assets/img/bg_login.png";
+import avaDefault from "../assets/img/avaDefault.png";
 import axios from "axios";
 import { password } from "bun";
 import { useNavigate } from "react-router";
@@ -222,7 +223,7 @@ function Profile() {
             <div className="flex flex-col items-center justify-center gap-2 border-2 border-gray-300 py-6 px-10 rounded-xl">
               <div className="avatar">
                 <div className="w-36 rounded-full">
-                  <img src="https://img.daisyui.com/images/profile/demo/yellingcat@192.webp" />
+                  <img src={myself?.avatar || avaDefault} />
                 </div>
                 <div className="absolute bottom-0 right-0">
                   <input
