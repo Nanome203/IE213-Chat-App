@@ -48,7 +48,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
     typingTimeoutRef.current = setTimeout(() => {
       onStopTyping?.(); // tell server user stopped typing
       typingTimeoutRef.current = null;
-    }, 1500);
+    }, 800);
   };
   const handleSelectedFile = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
