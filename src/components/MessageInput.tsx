@@ -197,6 +197,9 @@ const MessageInput: React.FC<MessageInputProps> = ({
       } else resolve(null);
     }).then(async (blob) => {
       const formData = new FormData();
+      if (blob) {
+        formData.append("voice", blob as Blob);
+      }
       if (text !== "") {
         formData.append("text", text);
       }
@@ -204,7 +207,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
         formData.append("image", imageFile);
       }
       if (voiceChat.current) {
-        formData.append("voice", voiceChat.current);
+        // formData.append("voice", voiceChat.current);
       }
       if (onStartSending) {
         onStartSending();
