@@ -45,7 +45,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
     setText(e.target.value);
     typingTimeout = setTimeout(() => {
       onStopTyping && onStopTyping();
-    }, 1500);
+    }, 3000);
   };
   const handleSelectedFile = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
