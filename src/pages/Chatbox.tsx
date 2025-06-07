@@ -666,20 +666,20 @@ function Chatbox() {
                       </div>
                       <div className="flex gap-4">
                         {/* Call Button */}
-                        <button
+                        {/* <button
                           className="flex justify-center items-center"
                           type="button"
                         >
                           <Phone className="w-5 h-5 text-gray-700 cursor-pointer" />
-                        </button>
+                        </button> */}
 
                         {/* Video Call Button */}
-                        <button
+                        {/* <button
                           className="flex justify-center items-center"
                           type="button"
                         >
                           <Video className="w-6 h-6 text-gray-700 cursor-pointer" />
-                        </button>
+                        </button> */}
                         <button
                           className="flex justify-center items-center"
                           type="button"
@@ -705,11 +705,17 @@ function Chatbox() {
                       ? messages?.map((message) => (
                           <div
                             key={message.id}
-                            className={`chat ${message.sender === myself?.id ? "chat-end" : "chat-start"}`}
+                            className={`chat ${
+                              message.sender === myself?.id
+                                ? "chat-end"
+                                : "chat-start"
+                            }`}
                             ref={messageEndRef}
                           >
                             <div
-                              className={`chat-image avatar ${message.sender === myself?.id ? "mr-4" : "ml-4"}`}
+                              className={`chat-image avatar ${
+                                message.sender === myself?.id ? "mr-4" : "ml-4"
+                              }`}
                             >
                               <div className="w-10 rounded-full">
                                 <img
@@ -729,11 +735,17 @@ function Chatbox() {
                       : messages?.map((message) => (
                           <div
                             key={message.id}
-                            className={`chat ${message.sender === myself?.id ? "chat-end" : "chat-start"}`}
+                            className={`chat ${
+                              message.sender === myself?.id
+                                ? "chat-end"
+                                : "chat-start"
+                            }`}
                             ref={messageEndRef}
                           >
                             <div
-                              className={`chat-image avatar ${message.sender === myself?.id ? "mr-4" : "ml-4"}`}
+                              className={`chat-image avatar ${
+                                message.sender === myself?.id ? "mr-4" : "ml-4"
+                              }`}
                             >
                               <div className="w-10 rounded-full">
                                 <img
