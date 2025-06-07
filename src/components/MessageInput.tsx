@@ -3,8 +3,10 @@ import axios from "axios";
 import {
   ImageIcon,
   MicIcon,
+  PlayCircleIcon,
   SendHorizonalIcon,
   StickerIcon,
+  StopCircleIcon,
   X,
 } from "lucide-react";
 import React, { useRef } from "react";
@@ -33,6 +35,8 @@ const MessageInput: React.FC<MessageInputProps> = ({
     string | ArrayBuffer | null
   >(null);
   const [imageFile, setImageFile] = React.useState<File | undefined>();
+  const [isRecording, setIsRecording] = React.useState(false);
+  const [isPaused, setIsPaused] = React.useState(false);
 
   const currentUserId = localStorage.getItem("currentUserId");
   const selectedUser =
@@ -129,16 +133,39 @@ const MessageInput: React.FC<MessageInputProps> = ({
           <div className="relative w-full flex items-center h-12 bg-gray-100 border border-gray-300 rounded-xl gap-2 px-2">
             <input
               placeholder="Type a message..."
-              className="text-gray-900 text-base w-full h-full outline-none rounded-lg flex-1 bg-transparent pl-4"
-              value={text}
+              className={`text-gray-900 text-base w-full h-full outline-none rounded-lg flex-1 bg-transparent pl-4 ${isRecording ? isPaused ? " pl-10" : "animate-pulse pl-10" : ""}`}
+              value={isRecording ? "Recording..." : text}
               onChange={handleInputChange}
             />
+            {isRecording && (
+              <div className="absolute left-4 text-[#778ff9]" onClick={() => setIsPaused((prev) => !prev)}>
+                {isPaused ? (
+                  <PlayCircleIcon className="w-6 h-6" />
+                ) : (
+                  <StopCircleIcon className="w-6 h-6" />
+                )}
+              </div>
+            )}
             {/* Icons */}
             <div className="flex items-center justify-center gap-2">
               {/* Button: Mic */}
-              <button type="button" title="Voice Message">
-                <MicIcon className="w-5 h-5 text-gray-500 hover:text-gray-800" />
+
+              <button
+                type="button"
+                title={isRecording ? "Cancel Recording" : "Voice Message"}
+                onClick={() => {
+                  setIsRecording((prev) => !prev);
+                  setIsPaused(false);
+                }}
+              >
+                {isRecording ? (
+                  <X className="w-5 h-5 text-red-500 hover:text-red-700" />
+                ) : (
+                  <MicIcon className="w-5 h-5 text-gray-500 hover:text-gray-800" />
+                )}
               </button>
+
+
               {/* Button: Image Upload */}
               <input
                 type="file"
