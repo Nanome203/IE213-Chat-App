@@ -175,6 +175,30 @@ Bun.serve({
             break;
           }
 
+          case "senderIsTyping": {
+            const receiver = parsedData.receiver!;
+            sessionManager.get(receiver)?.send(
+              JSON.stringify({
+                type: "senderIsTyping",
+                // sender: currentUserId,
+                // receiver: selectedUser.id,
+              })
+            );
+            break;
+          }
+
+          case "senderIsNotTyping": {
+            const receiver = parsedData.receiver!;
+
+            sessionManager.get(receiver)?.send(
+              JSON.stringify({
+                type: "senderIsNotTyping",
+                // sender: currentUserId,
+                // receiver: selectedUser.id,
+              })
+            );
+            break;
+          }
           // more cases later
           default:
             break;
