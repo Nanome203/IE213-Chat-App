@@ -54,6 +54,7 @@ function Chatbox() {
   const [wannaBefriendedUserId, setWannaBefriendedUserId] = useState("");
 
   const messageEndRef = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   let pingInterval: NodeJS.Timeout;
   const currentUserId = localStorage.getItem("currentUserId");
@@ -317,8 +318,8 @@ function Chatbox() {
                 <div className="flex items-center gap-2">
                   {friendIsLoading ? (
                     <>
-                      <div className="skeleton h-12 w-12 shrink-0 rounded-full"></div>
-                      <div className="skeleton h-4 w-24"></div>
+                      <div className="skeleton bg-[#d4c2fd] h-12 w-12 shrink-0 rounded-full"></div>
+                      <div className="skeleton bg-[#d4c2fd] h-4 w-24"></div>
                     </>
                   ) : (
                     <>
@@ -480,16 +481,16 @@ function Chatbox() {
             <div className="min-h-0 max-w-full flex flex-col flex-grow-1 pt-2">
               <ul className="space-y-2 overflow-x-hidden overflow-y-auto flex flex-col basis-0 flex-grow-1">
                 {friendIsLoading
-                  ? // Hiển thị 10 khối skeleton giả lập
+                  ? // Hiển thị 10 khối skeleton bg-[#d4c2fd] giả lập
                   Array.from({ length: 10 }).map((_, index) => (
                     <div
                       key={index}
                       className="flex items-center gap-4 w-full mb-6"
                     >
-                      <div className="skeleton h-12 w-12 shrink-0 rounded-full"></div>
+                      <div className="skeleton bg-[#d4c2fd] h-12 w-12 shrink-0 rounded-full"></div>
                       <div className="flex-1 flex flex-col gap-4">
-                        <div className="skeleton h-4 w-1/2"></div>
-                        <div className="skeleton h-4 w-full"></div>
+                        <div className="skeleton bg-[#d4c2fd] h-4 w-1/2"></div>
+                        <div className="skeleton bg-[#d4c2fd] h-4 w-full"></div>
                       </div>
                     </div>
                   ))
@@ -620,10 +621,10 @@ function Chatbox() {
                       <div className="flex items-center gap-3">
                         {friendIsLoading ? (
                           <div className="flex items-center gap-4 w-full">
-                            <div className="skeleton h-12 w-12 shrink-0 rounded-full"></div>
+                            <div className="skeleton bg-[#d4c2fd] h-12 w-12 shrink-0 rounded-full"></div>
                             <div className="flex-1 flex flex-col gap-4">
-                              <div className="skeleton h-4 w-20"></div>
-                              <div className="skeleton h-4 w-24"></div>
+                              <div className="skeleton bg-[#d4c2fd] h-4 w-20"></div>
+                              <div className="skeleton bg-[#d4c2fd] h-4 w-24"></div>
                             </div>
                           </div>
                         ) : (
@@ -689,68 +690,97 @@ function Chatbox() {
                 >
                   {/* chat container */}
                   <div className="overflow-x-hidden overflow-y-auto flex flex-col basis-0 flex-grow-1">
-                    {messages?.map((message) => (
-                      <div
-                        key={message.id}
-                        className={`chat ${message.sender === myself?.id ? "chat-end" : "chat-start"}`}
-                        ref={messageEndRef}
-                      >
-                        <div
-                          className={`chat-image avatar ${message.sender === myself?.id ? "mr-4" : "ml-4"}`}
-                        >
-                          <div className="w-10 rounded-full">
+                    {
+                      messagesAreLoading ? (
+                        messages?.map((message) => (
+                          <div
+                            key={message.id}
+                            className={`chat ${message.sender === myself?.id ? "chat-end" : "chat-start"}`}
+                            ref={messageEndRef}
+                          >
+                            <div
+                              className={`chat-image avatar ${message.sender === myself?.id ? "mr-4" : "ml-4"}`}
+                            >
+                              <div className="w-10 rounded-full">
+                                <img
+                                  alt="avatar"
+                                  src={
+                                    message.sender === myself?.id
+                                      ? myself?.avatar || avaDefault
+                                      : selectedUser.avatar || avaDefault
+                                  }
+                                />
+                              </div>
+                            </div>
 
-                            <img
-                              alt="avatar"
-                              src={
-                                message.sender === myself?.id
-                                  ? myself?.avatar || avaDefault
-                                  : selectedUser.avatar || avaDefault
-                              }
-                            />
+                            <div className="chat-bubble skeleton bg-[#d4c2fd] h-16 w-[200px] flex flex-col items-center justify-center">
+                            </div>
                           </div>
-                        </div>
-                        <div className="chat-header mb-1">
-                          {message.sender === myself?.id
-                            ? myself?.name
-                            : selectedUser.name}
-                          <time className="text-xs opacity-50">
-                            {normalizeDate(message.createdAt)}
-                          </time>
+                        ))
+                      )
+                        :
+                        messages?.map((message) => (
+                          <div
+                            key={message.id}
+                            className={`chat ${message.sender === myself?.id ? "chat-end" : "chat-start"}`}
+                            ref={messageEndRef}
+                          >
+                            <div
+                              className={`chat-image avatar ${message.sender === myself?.id ? "mr-4" : "ml-4"}`}
+                            >
+                              <div className="w-10 rounded-full">
 
-                        </div>
-                        <div className="chat-bubble flex flex-col items-center justify-center">
+                                <img
+                                  alt="avatar"
+                                  src={
+                                    message.sender === myself?.id
+                                      ? myself?.avatar || avaDefault
+                                      : selectedUser?.avatar || avaDefault
+                                  }
+                                />
+                              </div>
+                            </div>
+                            <div className="chat-header mb-1">
+                              {message.sender === myself?.id
+                                ? myself?.name
+                                : selectedUser?.name}
+                              <time className="text-xs opacity-50">
+                                {normalizeDate(message.createdAt)}
+                              </time>
 
-                          {message.image && (
-                            <img
-                              src={
-                                typeof message.image === "string"
-                                  ? message.image
-                                  : avaDefault
-                              }
-                              className="sm:max-w-11/12 rounded-md mb-2"
-                            />
-                          )}
-                          {message.gif && (
-                            <img
-                              src={message.gif}
-                              className="sm:max-w-[200px] rounded-md mb-2"
-                            />
-                          )}
-                          {message.text && <p>{message.text}</p>}
+                            </div>
+                            <div className="chat-bubble flex flex-col items-center justify-center">
+
+                              {message.image && (
+                                <img
+                                  src={
+                                    typeof message.image === "string"
+                                      ? message.image
+                                      : avaDefault
+                                  }
+                                  className="sm:max-w-11/12 rounded-md mb-2"
+                                />
+                              )}
+                              {message.gif && (
+                                <img
+                                  src={message.gif}
+                                  className="sm:max-w-[200px] rounded-md mb-2"
+                                />
+                              )}
+                              {message.text && <p>{message.text}</p>}
 
 
-                        </div>
-                        <div className="chat-footer opacity-50">
-                          {isSendingMessage
-                            ? "Sending"
-                            : message.sender === myself?.id &&
-                            isLastMessage(messages, message) &&
-                            !isTyping &&
-                            "Delivered"}
-                        </div>
-                      </div>
-                    ))}
+                            </div>
+                            <div className="chat-footer opacity-50">
+                              {isSendingMessage
+                                ? "Sending"
+                                : message.sender === myself?.id &&
+                                isLastMessage(messages, message) &&
+                                !isTyping &&
+                                "Delivered"}
+                            </div>
+                          </div>
+                        ))}
                     {isTyping && (
                       <div className="chat chat-start">
                         <div className="chat-image avatar ml-4">
