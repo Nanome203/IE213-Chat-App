@@ -38,14 +38,17 @@ const MessageInput: React.FC<MessageInputProps> = ({
   const selectedUser =
     JSON.parse(localStorage.getItem("selectedUser")!) || null;
 
-  let typingTimeout: NodeJS.Timeout;
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    clearTimeout(typingTimeout);
-    onTyping && onTyping();
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    onTyping?.();
     setText(e.target.value);
-    typingTimeout = setTimeout(() => {
-      onStopTyping && onStopTyping();
-    }, 3000);
+    typingTimeoutRef.current = setTimeout(() => {
+      onStopTyping?.(); // tell server user stopped typing
+      typingTimeoutRef.current = null;
+    }, 1500);
   };
   const handleSelectedFile = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
