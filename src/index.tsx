@@ -163,6 +163,18 @@ Bun.serve({
               });
             break;
           }
+          case "syncMessage": {
+            const sender = parsedData.sender!;
+            const receiver = parsedData.receiver!;
+            sessionManager
+              .get(sender)
+              ?.send(JSON.stringify({ type: "syncMessage" }));
+            sessionManager
+              .get(receiver)
+              ?.send(JSON.stringify({ type: "syncMessage" }));
+            break;
+          }
+
           // more cases later
           default:
             break;

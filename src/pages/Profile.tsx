@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { ArrowLeftIcon, CameraIcon, Edit } from "lucide-react";
 import bgLogin from "../assets/img/bg_login.png";
+import avaDefault from "../assets/img/avaDefault.png";
 import axios from "axios";
-import { password } from "bun";
 import { useNavigate } from "react-router";
 
 interface User {
@@ -13,13 +13,24 @@ interface User {
   phone: string;
 }
 
+interface FormData {
+  name: string;
+  password: string;
+  phone: string;
+  avatar: File | string;
+}
+
 function Profile() {
   const navigate = useNavigate();
   const [myself, setMyself] = useState<User | null>(null);
-  const [formData, setFormData] = useState({
+  const [previewImage, setPreviewImage] = React.useState<
+    string | ArrayBuffer | null
+  >(null);
+  const [formData, setFormData] = useState<FormData>({
     name: "",
     password: "",
     phone: "",
+    avatar: "",
   });
   const [isEditing, setIsEditing] = useState({
     name: false,
@@ -41,6 +52,21 @@ function Profile() {
     }));
   };
 
+  async function fetchMyself() {
+    const response = await axios.get(
+      `http://localhost:3000/users/${localStorage.getItem("currentUserId")}`
+    );
+    if (response.data.data.length !== 0) {
+      setMyself(response.data.data[0]);
+      setFormData({
+        ...formData,
+        name: response.data.data[0].name,
+        password: "", // không lấy password
+        phone: response.data.data[0].phone,
+      });
+    }
+  }
+
   const handleCopyId = async () => {
     const currentUserId = localStorage.getItem("currentUserId");
     if (currentUserId) {
@@ -60,19 +86,6 @@ function Profile() {
   };
 
   useEffect(() => {
-    async function fetchMyself() {
-      const response = await axios.get(
-        `http://localhost:3000/users/${localStorage.getItem("currentUserId")}`
-      );
-      if (response.data.data.length !== 0) {
-        setMyself(response.data.data[0]);
-        setFormData({
-          name: response.data.data[0].name,
-          password: "", // không lấy password
-          phone: response.data.data[0].phone,
-        });
-      }
-    }
     fetchMyself();
   }, []);
 
@@ -82,7 +95,8 @@ function Profile() {
       const reader = new FileReader();
       reader.onloadend = () => {
         // Here you can handle the file data, e.g., send it to a server or display it
-        console.log(reader.result);
+        setPreviewImage(reader.result);
+        setFormData({ ...formData, avatar: file });
       };
       reader.readAsDataURL(file);
     } else {
@@ -93,13 +107,26 @@ function Profile() {
   };
 
   const handleSaveAll = async () => {
+    const data = new FormData();
+    data.append("name", formData.name);
+    data.append("password", formData.password);
+    data.append("phone", formData.phone);
+    data.append("avatar", formData.avatar);
     try {
-      await axios.patch(`http://localhost:3000/users/${myself?.id}`, formData);
+      const response = await axios.patch(
+        `http://localhost:3000/users/${myself?.id}`,
+        data
+      );
       setIsEditing({ name: false, password: false, phone: false });
-      alert("Cập nhật thành công!");
+      if (response.data.status === 200) {
+        alert("Profile data updated!!");
+        fetchMyself();
+      } else {
+        alert("Failed to update profile data");
+      }
     } catch (err) {
       console.error(err);
-      alert("Có lỗi xảy ra khi cập nhật.");
+      alert("Failed to update profile data. Please update later");
     }
   };
 
@@ -107,6 +134,7 @@ function Profile() {
     if (!myself) return;
 
     setFormData({
+      ...formData,
       name: myself.name,
       password: "",
       phone: myself.phone,
@@ -222,7 +250,13 @@ function Profile() {
             <div className="flex flex-col items-center justify-center gap-2 border-2 border-gray-300 py-6 px-10 rounded-xl">
               <div className="avatar">
                 <div className="w-36 rounded-full">
-                  <img src="https://img.daisyui.com/images/profile/demo/yellingcat@192.webp" />
+                  <img
+                    src={
+                      previewImage && typeof previewImage === "string"
+                        ? previewImage
+                        : myself?.avatar || avaDefault
+                    }
+                  />
                 </div>
                 <div className="absolute bottom-0 right-0">
                   <input
@@ -308,7 +342,7 @@ function Profile() {
                 <input
                   type="password"
                   id="password"
-                  value="********"
+                  value={isEditing.password ? "" : "********"}
                   onChange={handleInputChange}
                   disabled={!isEditing.password}
                   ref={passwordInputRef}

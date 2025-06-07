@@ -39,7 +39,6 @@ function Login() {
             setIsLoggedIn(true);
             localStorage.setItem("loginState", "true");
             localStorage.setItem("currentUserId", response.data.user.id);
-            localStorage.setItem("name", response.data.user.name);
           }, 1000);
         }, 1000);
       } else {
