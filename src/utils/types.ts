@@ -15,4 +15,5 @@ export type Message = {
   image: string | File | ArrayBuffer;
   text: string;
   gif?: string;
+  voice?: string;
 };
