@@ -268,7 +268,7 @@ export const userRoute = new Elysia({ prefix: "/users" })
     async ({ params: { id, friendId } }) => {
       const { data, error } = await supabase
         .from("messages")
-        .select("id, sender, text, image, createdAt: created_at")
+        .select("id, sender, text, voice, image, createdAt: created_at")
         .or(
           `and(sender.eq.${id}, receiver.eq.${friendId}),and(sender.eq.${friendId}, receiver.eq.${id}) `
         )
@@ -290,13 +290,14 @@ export const userRoute = new Elysia({ prefix: "/users" })
   )
   .post(
     "/:id/messages/:friendId",
-    async ({ params: { id, friendId }, body: { text, image } }) => {
+    async ({ params: { id, friendId }, body: { text, image, voice } }) => {
       let newMessage: {
         sender: string;
         receiver: string;
         text: string;
         image: string;
-      } = { sender: id, receiver: friendId, text: "", image: "" };
+        voice: string;
+      } = { sender: id, receiver: friendId, text: "", image: "", voice: "" };
       if (text) {
         newMessage = { ...newMessage, text };
       }
@@ -320,10 +321,31 @@ export const userRoute = new Elysia({ prefix: "/users" })
           .getPublicUrl(data.path);
         newMessage = { ...newMessage, image: publicUrl };
       }
+
+      if (voice) {
+        const fileName = `messages/voices/${id + "_" + friendId}/voice-${id}-${Date.now()}.webm`;
+
+        // uploading voice to bucket
+        const { data, error } = await supabase.storage
+          .from("bun-chat-app-bucket")
+          .upload(fileName, voice, {
+            contentType: "audio/webm",
+          });
+        if (error) {
+          console.error("Error uploading avatar:", error);
+          return null;
+        }
+
+        // retrieving voice's public url after uploading to bucket
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("bun-chat-app-bucket").getPublicUrl(fileName);
+        newMessage = { ...newMessage, voice: publicUrl };
+      }
       const { data, error } = await supabase
         .from("messages")
         .insert(newMessage)
-        .select("id, sender, text, image, createdAt: created_at");
+        .select("id, sender, text, image, voice, createdAt: created_at");
       if (error) {
         return {
           status: 500,
@@ -339,6 +361,7 @@ export const userRoute = new Elysia({ prefix: "/users" })
       body: t.Object({
         text: t.Optional(t.String()),
         image: t.Optional(t.File()),
+        voice: t.Optional(t.Any()),
       }),
       checkInvalidToken: true,
     }
