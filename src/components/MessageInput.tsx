@@ -219,7 +219,9 @@ const MessageInput: React.FC<MessageInputProps> = ({
             createdAt: new Date().toISOString(),
             image: previewImage,
             text,
-            voice: URL.createObjectURL(voiceChat.current!),
+            voice: voiceChat.current
+              ? URL.createObjectURL(voiceChat.current!)
+              : null,
           } as Message,
         ];
         setMessages(newMessage);
@@ -286,7 +288,9 @@ const MessageInput: React.FC<MessageInputProps> = ({
           <div className="relative w-full flex items-center h-12 bg-gray-100 border border-gray-300 rounded-xl gap-2 px-2">
             <input
               placeholder="Type a message..."
-              className={`text-gray-900 text-base w-full h-full outline-none rounded-lg flex-1 bg-transparent pl-4 ${isRecording ? (isPaused ? " pl-10" : "animate-pulse pl-10") : ""}`}
+              className={`text-gray-900 text-base w-full h-full outline-none rounded-lg flex-1 bg-transparent pl-4 ${
+                isRecording ? (isPaused ? " pl-10" : "animate-pulse pl-10") : ""
+              }`}
               value={isRecording ? "Recording..." : text}
               onChange={handleInputChange}
               disabled={isRecording}
