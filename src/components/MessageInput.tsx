@@ -13,6 +13,8 @@ interface MessageInputProps {
   messages: Message[];
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
   onChange?: (value: string) => void;
+  onTyping?: () => void;
+  onStopTyping?: () => void;
   onFinishedSending?: () => void;
   onStartSending?: () => void;
 }
@@ -20,6 +22,8 @@ interface MessageInputProps {
 const MessageInput: React.FC<MessageInputProps> = ({
   onFinishedSending,
   onStartSending,
+  onTyping,
+  onStopTyping,
   messages,
   setMessages,
 }) => {
@@ -34,6 +38,15 @@ const MessageInput: React.FC<MessageInputProps> = ({
   const selectedUser =
     JSON.parse(localStorage.getItem("selectedUser")!) || null;
 
+  let typingTimeout: NodeJS.Timeout;
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    clearTimeout(typingTimeout);
+    onTyping && onTyping();
+    setText(e.target.value);
+    typingTimeout = setTimeout(() => {
+      onStopTyping && onStopTyping();
+    }, 1500);
+  };
   const handleSelectedFile = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -86,10 +99,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
   };
 
   return (
-    <form
-      className="p-4 bottom-0 left-0 right-0"
-      onSubmit={handleSendData}
-    >
+    <form className="p-4 bottom-0 left-0 right-0" onSubmit={handleSendData}>
       <div className="flex gap-2 items-end max-w-full mx-auto h-full">
         <div className="w-full h-full flex flex-col justify-end ">
           {/* Image Preview */}
@@ -118,7 +128,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
               placeholder="Type a message..."
               className="text-gray-900 text-base w-full h-full outline-none rounded-lg flex-1 bg-transparent pl-4"
               value={text}
-              onChange={(e) => setText(e.target.value)}
+              onChange={handleInputChange}
             />
             {/* Icons */}
             <div className="flex items-center justify-center gap-2">
