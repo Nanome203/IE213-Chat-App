@@ -774,12 +774,7 @@ function Chatbox() {
                               {message.text && <p>{message.text}</p>}
                               {message.voice && (
                                 <div className="h-full w-full flex items-center justify-center gap-2">
-                                  <audio controls>
-                                    <source
-                                      src={message.voice}
-                                      type="audio/mpeg"
-                                    />
-                                  </audio>
+                                  <audio controls src={message.voice} />
                                 </div>
                               )}
                             </div>
