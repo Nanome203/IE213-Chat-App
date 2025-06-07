@@ -65,8 +65,8 @@ export const authRoute = new Elysia({ prefix: "/auth" })
           sameSite: "strict",
           maxAge:
             process.env.NODE_ENV === "development"
-              ? 60 * 60 * 24
-              : 60 * 60 * 24 * 365,
+              ? 60 * 60 * 24 * 365
+              : 60 * 60 * 24,
         });
         const cleanedUserData = {
           name: userData[0].name,
