@@ -341,59 +341,66 @@ function Chatbox() {
                       menuTextColor="text-gray-600"
                       customContent={() => (
                         <div className="flex flex-col gap-4 p-2 max-h-[400px] overflow-y-auto">
-                          {invitors?.length > 0 ? (
-                            invitors?.map((invitor) => (
-                              <div
-                                key={invitor.id}
-                                className="flex flex-col items-center gap-4"
-                              >
-                                <div className="flex items-center gap-4">
-                                  <div className="avatar">
-                                    <div className="w-10 rounded-full">
-                                      <img src={invitor.avatar} />
+                          {
+                            !invitorsIsLoading ?
+                              invitors?.length > 0 ? (
+                                invitors?.map((invitor) => (
+                                  <div
+                                    key={invitor.id}
+                                    className="flex flex-col items-center gap-4"
+                                  >
+                                    <div className="flex items-center gap-4">
+                                      <div className="avatar">
+                                        <div className="w-10 rounded-full">
+                                          <img src={invitor.avatar} />
+                                        </div>
+                                      </div>
+                                      <p className="text-sm font-medium">
+                                        {invitor.name} sent you a friend request
+                                      </p>
+                                    </div>
+                                    <div className="flex gap-4 ml-8">
+                                      <button
+                                        className="btn btn-sm btn-outline"
+                                        onClick={() => {
+                                          ws?.send(
+                                            JSON.stringify({
+                                              type: "declineFriendRequest",
+                                              invitor: invitor.id,
+                                              invited: currentUserId,
+                                            })
+                                          );
+                                        }}
+                                      >
+                                        Decline
+                                      </button>
+                                      <button
+                                        className="btn btn-sm btn-success"
+                                        onClick={() => {
+                                          ws?.send(
+                                            JSON.stringify({
+                                              type: "acceptFriendRequest",
+                                              invitor: invitor.id,
+                                              invited: currentUserId,
+                                            })
+                                          );
+                                        }}
+                                      >
+                                        Accept
+                                      </button>
                                     </div>
                                   </div>
-                                  <p className="text-sm font-medium">
-                                    {invitor.name} sent you a friend request
-                                  </p>
+                                ))
+                              ) : (
+                                <div className="h-[200px] flex items-center justify-center ">
+                                  No notifications
                                 </div>
-                                <div className="flex gap-4 ml-8">
-                                  <button
-                                    className="btn btn-sm btn-outline"
-                                    onClick={() => {
-                                      ws?.send(
-                                        JSON.stringify({
-                                          type: "declineFriendRequest",
-                                          invitor: invitor.id,
-                                          invited: currentUserId,
-                                        })
-                                      );
-                                    }}
-                                  >
-                                    Decline
-                                  </button>
-                                  <button
-                                    className="btn btn-sm btn-success"
-                                    onClick={() => {
-                                      ws?.send(
-                                        JSON.stringify({
-                                          type: "acceptFriendRequest",
-                                          invitor: invitor.id,
-                                          invited: currentUserId,
-                                        })
-                                      );
-                                    }}
-                                  >
-                                    Accept
-                                  </button>
+                              ) : (
+                                <div className="flex items-center gap-4">
+                                  <div className="skeleton bg-[#d4c2fd] h-10 w-10 shrink-0 rounded-full"></div>
+                                  <div className="skeleton bg-[#d4c2fd] h-8 w-16"></div>
                                 </div>
-                              </div>
-                            ))
-                          ) : (
-                            <div className="h-[200px] flex items-center justify-center ">
-                              No notifications
-                            </div>
-                          )}
+                              )}
                         </div>
                       )}
                     />
@@ -768,6 +775,13 @@ function Chatbox() {
                                 />
                               )}
                               {message.text && <p>{message.text}</p>}
+                              {message.voice &&
+                                <div className="h-full w-full flex items-center justify-center gap-2">
+                                  <audio controls>
+                                    <source src={message.voice} type="audio/mpeg" />
+                                  </audio>
+                                </div>
+                              }
 
 
                             </div>
