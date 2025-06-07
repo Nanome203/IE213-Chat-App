@@ -87,7 +87,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
 
   return (
     <form
-      className="p-4 h-60 absolute bottom-0 left-0 right-0"
+      className="p-4 bottom-0 left-0 right-0"
       onSubmit={handleSendData}
     >
       <div className="flex gap-2 items-end max-w-full mx-auto h-full">
