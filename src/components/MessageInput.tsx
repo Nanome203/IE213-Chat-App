@@ -44,7 +44,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
   const audioChunks = useRef<Blob[]>([]);
   const voiceChat = useRef<Blob | null>(null);
   const mediaRecorder = useRef<MediaRecorder | null>(null);
-  const discardRecoredVoice = useRef<boolean>(false);
+  // const discardRecoredVoice = useRef<boolean>(false);
 
   const currentUserId = localStorage.getItem("currentUserId");
   const selectedUser =

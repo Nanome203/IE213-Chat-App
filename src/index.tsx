@@ -8,12 +8,14 @@ import { userRoute } from "./backend/userRoute";
 import { sessionManager } from "./utils/session-manager";
 import supabase from "./utils/database";
 import { SocketMsg } from "./utils/types";
+import { voiceChatRoute } from "./backend/videoChatRoute";
 
 const app = new Elysia()
   .use(swagger())
   .use(testPlugin())
   .use(authRoute)
   .use(userRoute)
+  .use(voiceChatRoute)
   .get("/", ({ redirect }) => {
     return redirect("/app");
   });

@@ -9,6 +9,7 @@ import axios from "axios";
 import ForgetPassword from "./pages/ForgetPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
+import CallPage from "./pages/CallPage";
 
 export function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(
@@ -52,8 +53,13 @@ export function App() {
           path: "reset-password/:id",
           element: isLoggedIn ? <Navigate to="/app/home" /> : <ResetPassword />,
         },
+        {
+          path: "call/:id",
+          element: isLoggedIn ? <CallPage /> : <Navigate to="/app/home" />,
+        },
       ],
-      errorElement: <Navigate to={`/app/${isLoggedIn ? "home" : "login"}`} />,
+      // errorElement: <Navigate to={`/app/${isLoggedIn ? "home" : "login"}`} />,
+      errorElement: <div>Error not found</div>,
     },
   ]);
 

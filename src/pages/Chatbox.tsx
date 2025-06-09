@@ -26,6 +26,7 @@ import { authContext } from "@/context";
 import { Message, SocketMsg } from "@/utils/types";
 import { isLastMessage, normalizeDate } from "@/utils/etc";
 import { log } from "console";
+import { useNavigate } from "react-router";
 
 interface User {
   id: string;
@@ -246,6 +247,46 @@ function Chatbox() {
     }
   }, []);
 
+  const handleCall = async () => {
+    // const navigate = useNavigate();
+    const formData = new FormData();
+    formData.append(
+      "text",
+      `Click <a class="underline text-blue-600 hover:text-red-600 active:text-red-800 visited:text-purple-600" href="http://localhost:3000/app/call/${currentUserId}" target="_blank">here</a> to join call room`
+    );
+
+    setIsSendingMessage(true);
+
+    let newMessage = [
+      ...messages.map((message) => message),
+      {
+        id: "temp",
+        sender: currentUserId ?? "",
+        createdAt: new Date().toISOString(),
+        image: "",
+        text: `Click <a class="underline text-blue-600 hover:text-red-600 active:text-red-800 visited:text-purple-600" href="http://localhost:3000/app/call/${currentUserId}" target="_blank">here</a> to join call room`,
+        voice: "",
+      } as Message,
+    ];
+    setMessages(newMessage);
+
+    const response = await axios.post(
+      `http://localhost:3000/users/${currentUserId}/messages/${selectedUser?.id}`,
+      formData
+    );
+
+    if (response.data.status === 200) {
+      setIsSendingMessage(false);
+      ws?.send(
+        JSON.stringify({
+          type: "syncMessage",
+          sender: currentUserId,
+          receiver: selectedUser?.id,
+        })
+      );
+    }
+    // navigate("");
+  };
   const handleLogout = async () => {
     try {
       const response = await axios.post("http://localhost:3000/auth/logout", {
@@ -674,12 +715,13 @@ function Chatbox() {
                         </button> */}
 
                         {/* Video Call Button */}
-                        {/* <button
+                        <button
                           className="flex justify-center items-center"
                           type="button"
+                          onClick={handleCall}
                         >
                           <Video className="w-6 h-6 text-gray-700 cursor-pointer" />
-                        </button> */}
+                        </button>
                         <button
                           className="flex justify-center items-center"
                           type="button"
@@ -783,7 +825,13 @@ function Chatbox() {
                                   className="sm:max-w-[200px] rounded-md mb-2"
                                 />
                               )}
-                              {message.text && <p>{message.text}</p>}
+                              {message.text && (
+                                <p
+                                  dangerouslySetInnerHTML={{
+                                    __html: message.text,
+                                  }}
+                                />
+                              )}
                               {message.voice && (
                                 <div className="h-full w-full flex items-center justify-center gap-2">
                                   <audio controls src={message.voice} />
