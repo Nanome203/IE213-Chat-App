@@ -45,6 +45,8 @@ function Chatbox() {
   const [invitors, setInvitors] = useState<User[]>([]);
   const [myself, setMyself] = useState<User | null>(null);
   const [messages, setMessages] = useState<Message[]>([]); // messages call API
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const searchTimeout = useRef<NodeJS.Timeout | null>(null);
   const [friendIsLoading, setFriendIsLoading] = useState(false);
   const [invitorsIsLoading, setInvitorsIsLoading] = useState(false);
   const [messagesAreLoading, setMessagesAreLoading] = useState(false);
@@ -511,6 +513,32 @@ function Chatbox() {
                     name="text"
                     className="bg-transparent py-2.5 px-2 outline-none placeholder:text-zinc-300 text-sm flex-1 min-w-0"
                     placeholder="Search..."
+                    value={searchTerm}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setSearchTerm(value);
+                      if (searchTimeout.current)
+                        clearTimeout(searchTimeout.current);
+                      searchTimeout.current = setTimeout(() => {
+                        if (
+                          JSON.parse(localStorage.getItem("allFriends")!) ==
+                          null
+                        )
+                          localStorage.setItem(
+                            "allFriends",
+                            JSON.stringify(friends)
+                          );
+                        setFriends(
+                          JSON.parse(
+                            localStorage.getItem("allFriends")!
+                          ).filter((user: User) =>
+                            user.name
+                              .toLowerCase()
+                              .includes(value.toLowerCase())
+                          )
+                        );
+                      }, 1000);
+                    }}
                   />
                   <button
                     className="w-10 py-2 flex-shrink-0 grid place-content-center cursor-pointer hover:text-gray-300"
