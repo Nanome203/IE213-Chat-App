@@ -44,7 +44,6 @@ const MessageInput: React.FC<MessageInputProps> = ({
   const audioChunks = useRef<Blob[]>([]);
   const voiceChat = useRef<Blob | null>(null);
   const mediaRecorder = useRef<MediaRecorder | null>(null);
-  // const discardRecoredVoice = useRef<boolean>(false);
 
   const currentUserId = localStorage.getItem("currentUserId");
   const selectedUser =
@@ -63,8 +62,6 @@ const MessageInput: React.FC<MessageInputProps> = ({
   };
 
   const startRecording = async () => {
-    console.log("Starting");
-
     if (mediaRecorder.current === null) {
       try {
         stream.current = await navigator.mediaDevices.getUserMedia({
@@ -74,25 +71,12 @@ const MessageInput: React.FC<MessageInputProps> = ({
 
         mediaRecorder.current.ondataavailable = (event) => {
           if (event.data.size > 0) {
-            console.log("Pushed ", event.data);
-
             audioChunks.current.push(event.data);
           }
         };
 
         mediaRecorder.current.onstop = () => {
           stream.current?.getTracks().forEach((track) => track.stop()); // stop mic use, AI suggested
-          // if (!discardRecoredVoice.current) {
-          //   voiceChat.current = new Blob(audioChunks.current, {
-          //     type: "audio/webm",
-          //   });
-          // }
-
-          // const audioUrl = URL.createObjectURL(voiceChat.current!);
-          // const audio = document.createElement("audio");
-          // audio.src = audioUrl;
-          // audio.play();
-
           audioChunks.current = [];
           mediaRecorder.current = null; // allow restarting, AI suggested
         };
@@ -119,13 +103,10 @@ const MessageInput: React.FC<MessageInputProps> = ({
       setIsRecording(false);
       // discardRecoredVoice.current = true;
       mediaRecorder.current.stop();
-      console.log("Stopping");
     }
   };
 
   const pauseRecording = () => {
-    console.log("Pausing");
-
     if (
       mediaRecorder.current !== null &&
       mediaRecorder.current.state === "recording"
@@ -136,8 +117,6 @@ const MessageInput: React.FC<MessageInputProps> = ({
   };
 
   const resumeRecording = () => {
-    console.log("Resuming");
-
     if (
       mediaRecorder.current !== null &&
       mediaRecorder.current.state === "paused"

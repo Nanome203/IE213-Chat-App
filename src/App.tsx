@@ -53,13 +53,8 @@ export function App() {
           path: "reset-password/:id",
           element: isLoggedIn ? <Navigate to="/app/home" /> : <ResetPassword />,
         },
-        {
-          path: "call/:id",
-          element: isLoggedIn ? <CallPage /> : <Navigate to="/app/home" />,
-        },
       ],
-      // errorElement: <Navigate to={`/app/${isLoggedIn ? "home" : "login"}`} />,
-      errorElement: <div>Error not found</div>,
+      errorElement: <Navigate to={`/app/${isLoggedIn ? "home" : "login"}`} />,
     },
   ]);
 
