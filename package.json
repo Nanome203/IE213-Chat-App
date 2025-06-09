@@ -9,8 +9,6 @@
     "dev": "bun --watch src/index.tsx",
     "start": "NODE_ENV=production bun src/index.tsx",
     "build": "bun run build.ts",
-    "schema": "bunx drizzle-kit pull",
-    "email": "email dev --dir src/components"
   },
   "dependencies": {
     "@elysiajs/jwt": "^1.3.1",
