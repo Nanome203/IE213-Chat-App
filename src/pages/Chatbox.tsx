@@ -522,11 +522,11 @@ function Chatbox() {
                 </form>
               </div>
 
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-between mb-2 pt-4">
                 <p className="text-xs font-semibold uppercase tracking-wide text-gray-300">
                   Messages
                 </p>
-                <MenuDropdown
+                {/* <MenuDropdown
                   triggerIcon={<Ellipsis className="w-5 h-5 text-white" />}
                   menuBgColor="bg-white/80"
                   menuTextColor="text-gray-600"
@@ -540,7 +540,7 @@ function Chatbox() {
                       </li>
                     </ul>
                   )}
-                />
+                /> */}
               </div>
             </div>
 
@@ -740,12 +740,13 @@ function Chatbox() {
                         >
                           <Video className="w-6 h-6 text-gray-700 cursor-pointer" />
                         </button>
-                        <button
+                        {/* User Info Button */}
+                        {/* <button
                           className="flex justify-center items-center"
                           type="button"
                         >
                           <Info className="w-6 h-6 text-gray-700 cursor-pointer" />
-                        </button>
+                        </button> */}
                       </div>
                     </div>
                   </div>
