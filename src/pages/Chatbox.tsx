@@ -72,6 +72,18 @@ function Chatbox() {
     setIsAddFriendFormVisible(!isAddFriendFormVisible);
   };
 
+  const startSearching = (value: string) => {
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    searchTimeout.current = setTimeout(() => {
+      if (JSON.parse(localStorage.getItem("allFriends")!) == null)
+        localStorage.setItem("allFriends", JSON.stringify(friends));
+      setFriends(
+        JSON.parse(localStorage.getItem("allFriends")!).filter((user: User) =>
+          user.name.toLowerCase().includes(value.toLowerCase())
+        )
+      );
+    }, 0);
+  };
   const handleFriendClicked = async (user: User) => {
     // Store the selected user so that when we reload the page, the chat with selected user will still be opened
     localStorage.setItem("selectedUser", JSON.stringify(user));
@@ -517,33 +529,17 @@ function Chatbox() {
                     onChange={(e) => {
                       const value = e.target.value;
                       setSearchTerm(value);
-                      if (searchTimeout.current)
-                        clearTimeout(searchTimeout.current);
-                      searchTimeout.current = setTimeout(() => {
-                        if (
-                          JSON.parse(localStorage.getItem("allFriends")!) ==
-                          null
-                        )
-                          localStorage.setItem(
-                            "allFriends",
-                            JSON.stringify(friends)
-                          );
-                        setFriends(
-                          JSON.parse(
-                            localStorage.getItem("allFriends")!
-                          ).filter((user: User) =>
-                            user.name
-                              .toLowerCase()
-                              .includes(value.toLowerCase())
-                          )
-                        );
-                      }, 0);
+                      startSearching(value);
                     }}
                   />
                   <button
                     className="w-10 py-2 flex-shrink-0 grid place-content-center cursor-pointer hover:text-gray-300"
                     aria-label="Clear input button"
                     type="reset"
+                    onClick={() => {
+                      setSearchTerm("");
+                      startSearching("");
+                    }}
                   >
                     <XIcon className="h-5 w-5" />
                   </button>
