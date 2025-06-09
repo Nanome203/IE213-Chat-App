@@ -211,8 +211,11 @@ function Chatbox() {
           }
 
           case "syncMessage": {
-            if (selectedUser) {
-              fetchMessages(selectedUser);
+            let scopedSelectedUser = JSON.parse(
+              localStorage.getItem("selectedUser")!
+            );
+            if (scopedSelectedUser) {
+              fetchMessages(scopedSelectedUser);
             }
             break;
           }
@@ -855,7 +858,9 @@ function Chatbox() {
                         JSON.stringify({
                           type: "syncMessage",
                           sender: currentUserId,
-                          receiver: selectedUser.id,
+                          receiver: JSON.parse(
+                            localStorage.getItem("selectedUser")!
+                          ).id,
                         })
                       );
                     }}
