@@ -512,7 +512,7 @@ function Chatbox() {
                     type="text"
                     name="text"
                     className="bg-transparent py-2.5 px-2 outline-none placeholder:text-zinc-300 text-sm flex-1 min-w-0"
-                    placeholder="Search..."
+                    placeholder="Search added friends..."
                     value={searchTerm}
                     onChange={(e) => {
                       const value = e.target.value;
@@ -537,7 +537,7 @@ function Chatbox() {
                               .includes(value.toLowerCase())
                           )
                         );
-                      }, 1000);
+                      }, 0);
                     }}
                   />
                   <button
