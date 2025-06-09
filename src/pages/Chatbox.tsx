@@ -45,6 +45,8 @@ function Chatbox() {
   const [invitors, setInvitors] = useState<User[]>([]);
   const [myself, setMyself] = useState<User | null>(null);
   const [messages, setMessages] = useState<Message[]>([]); // messages call API
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const searchTimeout = useRef<NodeJS.Timeout | null>(null);
   const [friendIsLoading, setFriendIsLoading] = useState(false);
   const [invitorsIsLoading, setInvitorsIsLoading] = useState(false);
   const [messagesAreLoading, setMessagesAreLoading] = useState(false);
@@ -70,6 +72,18 @@ function Chatbox() {
     setIsAddFriendFormVisible(!isAddFriendFormVisible);
   };
 
+  const startSearching = (value: string) => {
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    searchTimeout.current = setTimeout(() => {
+      if (JSON.parse(localStorage.getItem("allFriends")!) == null)
+        localStorage.setItem("allFriends", JSON.stringify(friends));
+      setFriends(
+        JSON.parse(localStorage.getItem("allFriends")!).filter((user: User) =>
+          user.name.toLowerCase().includes(value.toLowerCase())
+        )
+      );
+    }, 0);
+  };
   const handleFriendClicked = async (user: User) => {
     // Store the selected user so that when we reload the page, the chat with selected user will still be opened
     localStorage.setItem("selectedUser", JSON.stringify(user));
@@ -218,8 +232,11 @@ function Chatbox() {
           }
 
           case "syncMessage": {
-            if (selectedUser) {
-              fetchMessages(selectedUser);
+            let scopedSelectedUser = JSON.parse(
+              localStorage.getItem("selectedUser")!
+            );
+            if (scopedSelectedUser) {
+              fetchMessages(scopedSelectedUser);
             }
             break;
           }
@@ -507,23 +524,33 @@ function Chatbox() {
                     type="text"
                     name="text"
                     className="bg-transparent py-2.5 px-2 outline-none placeholder:text-zinc-300 text-sm flex-1 min-w-0"
-                    placeholder="Search..."
+                    placeholder="Search added friends..."
+                    value={searchTerm}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setSearchTerm(value);
+                      startSearching(value);
+                    }}
                   />
                   <button
                     className="w-10 py-2 flex-shrink-0 grid place-content-center cursor-pointer hover:text-gray-300"
                     aria-label="Clear input button"
                     type="reset"
+                    onClick={() => {
+                      setSearchTerm("");
+                      startSearching("");
+                    }}
                   >
                     <XIcon className="h-5 w-5" />
                   </button>
                 </form>
               </div>
 
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-between mb-2 pt-4">
                 <p className="text-xs font-semibold uppercase tracking-wide text-gray-300">
                   Messages
                 </p>
-                <MenuDropdown
+                {/* <MenuDropdown
                   triggerIcon={<Ellipsis className="w-5 h-5 text-white" />}
                   menuBgColor="bg-white/80"
                   menuTextColor="text-gray-600"
@@ -537,7 +564,7 @@ function Chatbox() {
                       </li>
                     </ul>
                   )}
-                />
+                /> */}
               </div>
             </div>
 
@@ -737,12 +764,13 @@ function Chatbox() {
                         >
                           <Video className="w-6 h-6 text-gray-700 cursor-pointer" />
                         </button>
-                        <button
+                        {/* User Info Button */}
+                        {/* <button
                           className="flex justify-center items-center"
                           type="button"
                         >
                           <Info className="w-6 h-6 text-gray-700 cursor-pointer" />
-                        </button>
+                        </button> */}
                       </div>
                     </div>
                   </div>
@@ -918,7 +946,9 @@ function Chatbox() {
                         JSON.stringify({
                           type: "syncMessage",
                           sender: currentUserId,
-                          receiver: selectedUser.id,
+                          receiver: JSON.parse(
+                            localStorage.getItem("selectedUser")!
+                          ).id,
                         })
                       );
                     }}
