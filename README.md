@@ -1,4 +1,4 @@
-# bun-react-tailwind-template
+# Freestyle Chat App
 
 First, install dependencies:
 
@@ -6,19 +6,27 @@ First, install dependencies:
 bun install
 ```
 
-Then, create .env file and add the database url:
+Then, create .env file and fill in the following variables:
 
 ```env
-DATABASE_URL=
+// for jwt
+JWT_SECRET=
+NODE_ENV="development"
+
+//for nodemailer
+GMAIL_USER=
+GOOGLE_APP_PASS=
+
+// for supabase
+SUPABASE_URL=
+SUPABASE_ANON_KEY=
+
+// for getstream.io
+STREAM_API_KEY=
+STREAM_SECRET=
 ```
 
-Run the following command to generate database schema:
-
-```sh
-bun run schema
-```
-
-Finally, start a development server with:
+Finally, start Bun's full stack dev server with:
 
 ```bash
 bun run dev
