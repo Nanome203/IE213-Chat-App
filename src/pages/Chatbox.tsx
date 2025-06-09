@@ -26,6 +26,8 @@ import { authContext } from "@/context";
 import { Message, SocketMsg } from "@/utils/types";
 import { isLastMessage, normalizeDate } from "@/utils/etc";
 import { log } from "console";
+import { useNavigate } from "react-router";
+import CallPage from "./CallPage";
 
 interface User {
   id: string;
@@ -50,8 +52,13 @@ function Chatbox() {
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const { setIsLoggedIn } = React.useContext(authContext);
   const [showToast, setShowToast] = useState(false);
+  const [showCallModal, setShowCallModal] = useState(false);
   const [isAddFriendFormVisible, setIsAddFriendFormVisible] = useState(false);
   const [wannaBefriendedUserId, setWannaBefriendedUserId] = useState("");
+  const [isCalling, setIsCalling] = useState<boolean>(false);
+  const [isCallRejected, setIsCallRejected] = useState(false);
+  const [roomId, setRoomId] = useState<string>("");
+  const [caller, setCaller] = useState<User | null>(null);
 
   const messageEndRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -226,6 +233,25 @@ function Chatbox() {
             setIsTyping(false);
             break;
           }
+
+          case "roomIsReady": {
+            axios
+              .get(`http://localhost:3000/users/${msg.roomId}`)
+              .then((response) => {
+                if (response.data.status === 200) {
+                  setCaller(response.data.data[0]);
+                  setRoomId(msg.roomId!);
+                  setShowCallModal(true);
+                }
+              });
+
+            break;
+          }
+
+          case "callRejected": {
+            setIsCallRejected(true);
+            break;
+          }
           default:
             break;
         }
@@ -246,6 +272,9 @@ function Chatbox() {
     }
   }, []);
 
+  const handleCall = async () => {
+    setIsCalling(true);
+  };
   const handleLogout = async () => {
     try {
       const response = await axios.post("http://localhost:3000/auth/logout", {
@@ -271,7 +300,16 @@ function Chatbox() {
     }
   };
 
-  return (
+  return isCalling ? (
+    <CallPage
+      setIsCalling={setIsCalling}
+      isCallRejected={isCallRejected}
+      setIsCallRejected={setIsCallRejected}
+      setShowCallModal={setShowCallModal}
+      ws={ws}
+      roomId={roomId}
+    />
+  ) : (
     <>
       <dialog className="modal" id="logout-message">
         {showToast && (
@@ -304,6 +342,48 @@ function Chatbox() {
           <img src={logOutGif} alt="Log Out" className="mt-4 max-w-full" />
         </div>
       </dialog>
+
+      {/* modal for video call */}
+      <dialog className="modal" id="video-call-modal" open={showCallModal}>
+        <div className="modal-box bg-zinc-800 shadow-none">
+          <div className="flex flex-col items-center justify-center min-h-[300px]">
+            <div className="flex-1 flex gap-4 flex-col items-center justify-center">
+              <div className="avatar">
+                <div className="w-24 rounded-full">
+                  <img src={caller?.avatar || avaDefault} />
+                </div>
+              </div>
+              <p className="text-lg text-white animate-pulse">
+                {caller?.name} is calling ...
+              </p>
+            </div>
+
+            <div className="flex gap-4 mt-4">
+              <button
+                className="btn btn-error"
+                onClick={() => {
+                  setShowCallModal(false);
+                  ws?.send(
+                    JSON.stringify({ type: "callRejected", sender: roomId })
+                  );
+                  setRoomId("");
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-success"
+                onClick={() => {
+                  setIsCalling(true);
+                }}
+              >
+                Join Call
+              </button>
+            </div>
+          </div>
+        </div>
+      </dialog>
+
       <div
         className="h-screen w-screen"
         style={{
@@ -409,40 +489,16 @@ function Chatbox() {
                       <div className="absolute p-1 rounded-full bg-red-500 top-2 right-2"></div>
                     )}
                   </div>
-                  {/* <MenuDropdown
-                    position="bottom-right"
-                    iconColor="fill-white"
-                    menuBgColor="bg-white/80"
-                    menuTextColor="text-gray-600"
-                    itemHoverColor="hover:bg-[#6a5dad] hover:text-white"
-                    items={[
-                      {
-                        label: "Profile",
-                        icon: <User className="w-5 h-5 mr-2" />,
-                        onClick: () => console.log("Profile"),
-                      },
-                      {
-                        label: "Add Friend",
-                        icon: <UserPlus className="w-5 h-5 mr-2" />,
-                        onClick: () => console.log("Add Friend"),
-                      },
-                      {
-                        label: "Logout",
-                        icon: <LogOutIcon className="w-5 h-5 mr-2" />,
-                        onClick: handleLogout,
-                      },
-                    ]}
-                  /> */}
                 </div>
               </div>
 
               <div className="mb-3 px-2">
                 <form
                   className="
-      flex items-center bg-[#6c5f9b] text-white rounded-md shadow text-base
-      w-10/12 focus-within:w-full transition-all duration-300
-      mx-auto max-w-full
-    "
+  flex items-center bg-[#6c5f9b] text-white rounded-md shadow text-base
+  w-10/12 focus-within:w-full transition-all duration-300
+  mx-auto max-w-full
+"
                 >
                   <div className="w-10 flex-shrink-0 grid place-content-center">
                     <SearchIcon className="h-5 w-5" />
@@ -667,19 +723,20 @@ function Chatbox() {
                       <div className="flex gap-4">
                         {/* Call Button */}
                         {/* <button
-                          className="flex justify-center items-center"
-                          type="button"
-                        >
-                          <Phone className="w-5 h-5 text-gray-700 cursor-pointer" />
-                        </button> */}
+                      className="flex justify-center items-center"
+                      type="button"
+                    >
+                      <Phone className="w-5 h-5 text-gray-700 cursor-pointer" />
+                    </button> */}
 
                         {/* Video Call Button */}
-                        {/* <button
+                        <button
                           className="flex justify-center items-center"
                           type="button"
+                          onClick={handleCall}
                         >
                           <Video className="w-6 h-6 text-gray-700 cursor-pointer" />
-                        </button> */}
+                        </button>
                         <button
                           className="flex justify-center items-center"
                           type="button"
@@ -783,7 +840,13 @@ function Chatbox() {
                                   className="sm:max-w-[200px] rounded-md mb-2"
                                 />
                               )}
-                              {message.text && <p>{message.text}</p>}
+                              {message.text && (
+                                <p
+                                  dangerouslySetInnerHTML={{
+                                    __html: message.text,
+                                  }}
+                                />
+                              )}
                               {message.voice && (
                                 <div className="h-full w-full flex items-center justify-center gap-2">
                                   <audio controls src={message.voice} />

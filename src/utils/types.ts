@@ -6,6 +6,7 @@ export type SocketMsg = {
   invited?: string;
   sender?: string;
   receiver?: string;
+  roomId?: string;
 };
 
 export type Message = {
