@@ -9,6 +9,7 @@ import axios from "axios";
 import ForgetPassword from "./pages/ForgetPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
+import CallPage from "./pages/CallPage";
 
 export function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(

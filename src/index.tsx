@@ -8,12 +8,14 @@ import { userRoute } from "./backend/userRoute";
 import { sessionManager } from "./utils/session-manager";
 import supabase from "./utils/database";
 import { SocketMsg } from "./utils/types";
+import { voiceChatRoute } from "./backend/videoChatRoute";
 
 const app = new Elysia()
   .use(swagger())
   .use(testPlugin())
   .use(authRoute)
   .use(userRoute)
+  .use(voiceChatRoute)
   .get("/", ({ redirect }) => {
     return redirect("/app");
   });
@@ -101,7 +103,6 @@ Bun.serve({
           }
           case "friendRequest": {
             const invited = parsedData.invited!;
-            console.log("friendRequest called");
             sessionManager.get(invited)?.send(
               JSON.stringify({
                 type: "friendRequestNotification",
@@ -199,6 +200,23 @@ Bun.serve({
             );
             break;
           }
+
+          case "roomIsReady": {
+            const receiver = parsedData.receiver!;
+            const roomId = parsedData.roomId;
+            sessionManager
+              .get(receiver)
+              ?.send(JSON.stringify({ type: "roomIsReady", roomId }));
+            break;
+          }
+
+          case "callRejected": {
+            const sender = parsedData.sender!;
+            sessionManager
+              .get(sender)
+              ?.send(JSON.stringify({ type: "callRejected", sender }));
+            break;
+          }
           // more cases later
           default:
             break;
@@ -252,4 +270,4 @@ Bun.serve({
   },
 });
 
-console.log("Server running at http://localhost:3000/");
+console.log("Server is running at http://localhost:3000/");
